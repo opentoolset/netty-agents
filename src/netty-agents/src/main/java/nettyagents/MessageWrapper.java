@@ -26,6 +26,7 @@ public class MessageWrapper {
 	// ---
 
 	public MessageWrapper() {
+		// Required for deserialization
 	}
 
 	public static <T extends AbstractMessage> MessageWrapper create(T message) {
