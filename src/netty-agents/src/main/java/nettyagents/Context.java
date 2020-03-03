@@ -2,7 +2,7 @@
 // Copyright 2020 Mustafa Hadi Dilek
 // All rights reserved
 // ---
-package tr.com.mhadidilek.netty;
+package nettyagents;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -4,8 +4,8 @@
 // ---
 package tr.com.mhadidilek.netty.agents;
 
-import tr.com.mhadidilek.netty.AbstractMessage;
-import tr.com.mhadidilek.netty.AbstractRequest;
+import nettyagents.AbstractMessage;
+import nettyagents.AbstractRequest;
 
 public interface TestData {
 

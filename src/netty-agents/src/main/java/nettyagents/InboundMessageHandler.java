@@ -2,13 +2,13 @@
 // Copyright 2020 Mustafa Hadi Dilek
 // All rights reserved
 // ---
-package tr.com.mhadidilek.netty;
+package nettyagents;
 
 import org.slf4j.Logger;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import tr.com.mhadidilek.netty.MessageSender.OperationContext;
+import nettyagents.MessageSender.OperationContext;
 
 public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 

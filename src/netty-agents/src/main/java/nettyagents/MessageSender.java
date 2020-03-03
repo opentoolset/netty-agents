@@ -2,7 +2,7 @@
 // Copyright 2020 Mustafa Hadi Dilek
 // All rights reserved
 // ---
-package tr.com.mhadidilek.netty;
+package nettyagents;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

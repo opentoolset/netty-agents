@@ -13,7 +13,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import tr.com.mhadidilek.netty.PeerContext;
+import nettyagents.PeerContext;
+import nettyagents.agents.ClientAgent;
+import nettyagents.agents.ServerAgent;
 import tr.com.mhadidilek.netty.agents.TestData.SampleMessage;
 import tr.com.mhadidilek.netty.agents.TestData.SampleRequest;
 import tr.com.mhadidilek.netty.agents.TestData.SampleResponse;

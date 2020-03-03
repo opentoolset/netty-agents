@@ -2,7 +2,7 @@
 // Copyright 2020 Mustafa Hadi Dilek
 // All rights reserved
 // ---
-package tr.com.mhadidilek.netty.agents;
+package nettyagents.agents;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
@@ -17,14 +17,14 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import tr.com.mhadidilek.netty.AbstractAgent;
-import tr.com.mhadidilek.netty.AbstractMessage;
-import tr.com.mhadidilek.netty.AbstractRequest;
-import tr.com.mhadidilek.netty.Constants;
-import tr.com.mhadidilek.netty.InboundMessageHandler;
-import tr.com.mhadidilek.netty.MessageDecoder;
-import tr.com.mhadidilek.netty.MessageEncoder;
-import tr.com.mhadidilek.netty.PeerContext;
+import nettyagents.AbstractAgent;
+import nettyagents.AbstractMessage;
+import nettyagents.AbstractRequest;
+import nettyagents.Constants;
+import nettyagents.InboundMessageHandler;
+import nettyagents.MessageDecoder;
+import nettyagents.MessageEncoder;
+import nettyagents.PeerContext;
 
 public class ClientAgent extends AbstractAgent {
 
