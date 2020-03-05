@@ -1,5 +1,5 @@
 // ---
-// Copyright 2020 Mustafa Hadi Dilek
+// Copyright 2020 netty-agents team
 // All rights reserved
 // ---
 package nettyagents;
