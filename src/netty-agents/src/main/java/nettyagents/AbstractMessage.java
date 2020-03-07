@@ -4,10 +4,14 @@
 // ---
 package nettyagents;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public abstract class AbstractMessage {
+public abstract class AbstractMessage implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public String toString() {

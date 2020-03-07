@@ -4,18 +4,26 @@
 // ---
 package nettyagents;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+public class MessageWrapper implements Serializable {
 
-public class MessageWrapper {
+	private static final long serialVersionUID = 7776235450857746832L;
+
+	public interface Serializer {
+
+		String serialize(Object obj);
+
+		<T> T deserialize(String serialized, Class<T> classOfObj);
+	}
+
+	public transient static Serializer serializer = new SerializerJson();
+
+	private transient static Serializer outerSerializer = new SerializerJson();
 
 	private Class<? extends AbstractMessage> classOfMessage;
 	private String serializedMessage;
@@ -26,13 +34,12 @@ public class MessageWrapper {
 	// ---
 
 	public MessageWrapper() {
-		// Required for deserialization
 	}
 
 	public static <T extends AbstractMessage> MessageWrapper create(T message) {
 		MessageWrapper messageWrapper = new MessageWrapper();
 		messageWrapper.classOfMessage = message.getClass();
-		messageWrapper.serializedMessage = messageWrapper.serialize(message);
+		messageWrapper.serializedMessage = serializer.serialize(message);
 		return messageWrapper;
 	}
 
@@ -73,12 +80,12 @@ public class MessageWrapper {
 	}
 
 	public AbstractMessage deserializeMessage() {
-		AbstractMessage message = deserialize(this.serializedMessage, this.classOfMessage);
+		AbstractMessage message = serializer.deserialize(this.serializedMessage, this.classOfMessage);
 		return message;
 	}
 
 	public <T extends AbstractMessage> T deserializeMessage(Class<T> classOfMessage) {
-		T message = deserialize(this.serializedMessage, classOfMessage);
+		T message = serializer.deserialize(this.serializedMessage, classOfMessage);
 		return message;
 	}
 
@@ -89,36 +96,13 @@ public class MessageWrapper {
 
 	// ---
 
-	private String serialize(Object obj) {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-			String serializedMessageWrapper = mapper.writeValueAsString(obj);
-			return serializedMessageWrapper;
-		} catch (JsonProcessingException e) {
-			Context.getLogger().error(e.getLocalizedMessage(), e);
-			return null;
-		}
+	public static String serialize(MessageWrapper messageWrapper) {
+		String serialized = outerSerializer.serialize(messageWrapper);
+		return serialized;
 	}
-
-	// ---
 
 	public static MessageWrapper deserialize(String serializedMessageWrapper) {
-		MessageWrapper messageWrapper = deserialize(serializedMessageWrapper, MessageWrapper.class);
+		MessageWrapper messageWrapper = outerSerializer.deserialize(serializedMessageWrapper, MessageWrapper.class);
 		return messageWrapper;
-	}
-
-	// ---
-
-	private static <T> T deserialize(String serialized, Class<T> classOfObj) {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			T message = mapper.readValue(serialized, classOfObj);
-			return message;
-		} catch (IOException e) {
-			Context.getLogger().error(e.getLocalizedMessage(), e);
-			return null;
-		}
 	}
 }
