@@ -5,8 +5,11 @@
 package nettyagents.agents;
 
 import java.net.SocketAddress;
+import java.security.cert.CertificateException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.net.ssl.SSLException;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -14,14 +17,19 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import nettyagents.AbstractAgent;
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;
 import nettyagents.Constants;
+import nettyagents.Context;
 import nettyagents.InboundMessageHandler;
 import nettyagents.MessageDecoder;
 import nettyagents.MessageEncoder;
@@ -36,6 +44,8 @@ public class ServerAgent extends AbstractAgent {
 	private Config config = new Config();
 
 	private Map<SocketAddress, PeerContext> clients = new ConcurrentHashMap<>();
+
+	private SslContext sslCtx = null;
 
 	private boolean shutdownRequested = false;
 
@@ -59,15 +69,30 @@ public class ServerAgent extends AbstractAgent {
 	public void startup() {
 		this.shutdownRequested = false;
 
+		if (Context.sslEnabled) {
+			try {
+				SelfSignedCertificate ssc = new SelfSignedCertificate();
+				sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
+			} catch (CertificateException | SSLException e) {
+				logger.error(e.getLocalizedMessage(), e);
+			}
+		}
+
 		this.bootstrap.group(this.bossGroup, this.workerGroup);
 		this.bootstrap.channel(NioServerSocketChannel.class);
 		this.bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
 
 			@Override
-			public void initChannel(SocketChannel ch) throws Exception {
+			public void initChannel(SocketChannel channel) throws Exception {
 				try {
-					ch.pipeline().addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(context));
-					ch.pipeline().addLast(new ChannelHandler() {
+					ChannelPipeline pipeline = channel.pipeline();
+
+					if (sslCtx != null) {
+						pipeline.addLast(sslCtx.newHandler(channel.alloc()));
+					}
+
+					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(context));
+					pipeline.addLast(new ChannelHandler() {
 
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {

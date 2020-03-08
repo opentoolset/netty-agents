@@ -7,20 +7,27 @@ package nettyagents.agents;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLException;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import nettyagents.AbstractAgent;
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;
 import nettyagents.Constants;
+import nettyagents.Context;
 import nettyagents.InboundMessageHandler;
 import nettyagents.MessageDecoder;
 import nettyagents.MessageEncoder;
@@ -34,6 +41,8 @@ public class ClientAgent extends AbstractAgent {
 	private Config config = new Config();
 
 	private PeerContext peerContext = new PeerContext();
+
+	private SslContext sslCtx = null;
 
 	private boolean shutdownRequested = false;
 
@@ -53,16 +62,29 @@ public class ClientAgent extends AbstractAgent {
 	public void startup() {
 		this.shutdownRequested = false;
 
+		if (Context.sslEnabled) {
+			try {
+				sslCtx = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+			} catch (SSLException e) {
+				logger.error(e.getLocalizedMessage(), e);
+			}
+		}
+
 		this.bootstrap.group(workerGroup);
 		this.bootstrap.channel(NioSocketChannel.class);
 		this.bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
 		this.bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 
 			@Override
-			public void initChannel(SocketChannel ch) throws Exception {
+			public void initChannel(SocketChannel channel) throws Exception {
 				try {
-					ch.pipeline().addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(context));
-					ch.pipeline().addLast(new ChannelHandler() {
+					ChannelPipeline pipeline = channel.pipeline();
+					if (sslCtx != null) {
+						pipeline.addLast(sslCtx.newHandler(channel.alloc(), config.getRemoteHost(), config.getRemotePort()));
+					}
+
+					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(context));
+					pipeline.addLast(new ChannelHandler() {
 
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {

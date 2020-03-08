@@ -14,4 +14,5 @@ public interface Constants {
 	int DEFAULT_CHANNEL_WAIT_SEC = 10;
 	String DEFAULT_SERVER_HOST = "127.0.0.1";
 	int DEFAULT_SERVER_PORT = 4444;
+	boolean DEFAULT_SSL_ENABLED = true;
 }

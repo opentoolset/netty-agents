@@ -11,6 +11,8 @@ public class Context {
 
 	private static Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
+	public static boolean sslEnabled = Constants.DEFAULT_SSL_ENABLED;
+
 	private MessageSender messageSender = new MessageSender();
 
 	private MessageReceiver messageReceiver = new MessageReceiver();
