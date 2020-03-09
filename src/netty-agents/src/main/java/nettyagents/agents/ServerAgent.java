@@ -5,7 +5,8 @@
 package nettyagents.agents;
 
 import java.net.SocketAddress;
-import java.security.cert.CertificateException;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,7 +25,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
 import nettyagents.AbstractAgent;
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;
@@ -45,8 +45,6 @@ public class ServerAgent extends AbstractAgent {
 
 	private Map<SocketAddress, PeerContext> clients = new ConcurrentHashMap<>();
 
-	private SslContext sslCtx = null;
-
 	private boolean shutdownRequested = false;
 
 	// ---
@@ -58,6 +56,7 @@ public class ServerAgent extends AbstractAgent {
 	 * 
 	 * @return Configuration object
 	 */
+	@Override
 	public Config getConfig() {
 		return config;
 	}
@@ -66,17 +65,21 @@ public class ServerAgent extends AbstractAgent {
 		return clients;
 	}
 
+	@Override
 	public void startup() {
-		this.shutdownRequested = false;
+		super.startup();
 
 		if (Context.sslEnabled) {
 			try {
-				SelfSignedCertificate ssc = new SelfSignedCertificate();
-				sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
-			} catch (CertificateException | SSLException e) {
+				PrivateKey key = getConfig().getPriKey();
+				X509Certificate cert = getConfig().getCert();
+				setSslContext(SslContextBuilder.forServer(key, cert).trustManager(new TrustManager()).build());
+			} catch (SSLException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
 		}
+
+		this.shutdownRequested = false;
 
 		this.bootstrap.group(this.bossGroup, this.workerGroup);
 		this.bootstrap.channel(NioServerSocketChannel.class);
@@ -87,11 +90,12 @@ public class ServerAgent extends AbstractAgent {
 				try {
 					ChannelPipeline pipeline = channel.pipeline();
 
-					if (sslCtx != null) {
-						pipeline.addLast(sslCtx.newHandler(channel.alloc()));
+					SslContext sslContext = getSslContext();
+					if (sslContext != null) {
+						pipeline.addLast(sslContext.newHandler(channel.alloc()));
 					}
 
-					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(context));
+					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
 					pipeline.addLast(new ChannelHandler() {
 
 						@Override
@@ -123,21 +127,21 @@ public class ServerAgent extends AbstractAgent {
 	}
 
 	public void shutdown() {
-		this.context.getMessageSender().shutdown();
+		getContext().getMessageSender().shutdown();
 		this.bossGroup.shutdownGracefully();
 		this.workerGroup.shutdownGracefully();
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext) {
-		return this.context.getMessageSender().doRequest(request, peerContext);
+		return getContext().getMessageSender().doRequest(request, peerContext);
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext, int timeoutSec) {
-		return this.context.getMessageSender().doRequest(request, peerContext, timeoutSec);
+		return getContext().getMessageSender().doRequest(request, peerContext, timeoutSec);
 	}
 
 	public void sendMessage(AbstractMessage message, PeerContext peerContext) {
-		this.context.getMessageSender().sendMessage(message, peerContext);
+		getContext().getMessageSender().sendMessage(message, peerContext);
 	}
 
 	// ---
@@ -159,7 +163,7 @@ public class ServerAgent extends AbstractAgent {
 		return value;
 	}
 
-	public class Config {
+	public class Config extends AbstractConfig {
 
 		private int localPort = Constants.DEFAULT_SERVER_PORT;
 

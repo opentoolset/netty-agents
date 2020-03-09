@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 public interface Constants {
 
+	Charset CRYPTO_CHARSET = StandardCharsets.US_ASCII;
 	Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	int DEFAULT_REQUEST_TIMEOUT_SEC = 10;
 	int DEFAULT_CHANNEL_WAIT_SEC = 10;

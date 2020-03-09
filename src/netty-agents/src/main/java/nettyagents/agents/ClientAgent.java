@@ -5,8 +5,11 @@
 package nettyagents.agents;
 
 import java.net.InetSocketAddress;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 
 import io.netty.bootstrap.Bootstrap;
@@ -22,7 +25,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import nettyagents.AbstractAgent;
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;
@@ -42,9 +44,8 @@ public class ClientAgent extends AbstractAgent {
 
 	private PeerContext peerContext = new PeerContext();
 
-	private SslContext sslCtx = null;
-
 	private boolean shutdownRequested = false;
+	private SSLEngine sslEngine;
 
 	// ---
 
@@ -60,15 +61,26 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	public void startup() {
-		this.shutdownRequested = false;
+		super.startup();
 
 		if (Context.sslEnabled) {
 			try {
-				sslCtx = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+				// SSLContext sslContext = SSLContext.getInstance("TLS");
+				// sslContext.init(null, ArrayUtils.toArray(new TrustManager()), null);
+				//
+				// sslEngine = sslContext.createSSLEngine();
+				// sslEngine.setUseClientMode(false);
+				// sslEngine.setNeedClientAuth(true);
+
+				PrivateKey key = getConfig().getPriKey();
+				X509Certificate cert = getConfig().getCert();
+				setSslContext(SslContextBuilder.forClient().trustManager(new TrustManager()).build());
 			} catch (SSLException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
 		}
+
+		this.shutdownRequested = false;
 
 		this.bootstrap.group(workerGroup);
 		this.bootstrap.channel(NioSocketChannel.class);
@@ -79,11 +91,13 @@ public class ClientAgent extends AbstractAgent {
 			public void initChannel(SocketChannel channel) throws Exception {
 				try {
 					ChannelPipeline pipeline = channel.pipeline();
-					if (sslCtx != null) {
-						pipeline.addLast(sslCtx.newHandler(channel.alloc(), config.getRemoteHost(), config.getRemotePort()));
+
+					SslContext sslContext = getSslContext();
+					if (sslContext != null) {
+						pipeline.addLast(sslContext.newHandler(channel.alloc(), config.getRemoteHost(), config.getRemotePort()));
 					}
 
-					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(context));
+					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
 					pipeline.addLast(new ChannelHandler() {
 
 						@Override
@@ -127,15 +141,15 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request) {
-		return this.context.getMessageSender().doRequest(request, this.peerContext);
+		return getContext().getMessageSender().doRequest(request, this.peerContext);
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, int timeoutSec) {
-		return this.context.getMessageSender().doRequest(request, this.peerContext, timeoutSec);
+		return getContext().getMessageSender().doRequest(request, this.peerContext, timeoutSec);
 	}
 
 	public void sendMessage(AbstractMessage message) {
-		this.context.getMessageSender().sendMessage(message, this.peerContext);
+		getContext().getMessageSender().sendMessage(message, this.peerContext);
 	}
 
 	// ---
@@ -169,7 +183,7 @@ public class ClientAgent extends AbstractAgent {
 
 	// ---
 
-	public class Config {
+	public class Config extends AbstractConfig {
 
 		private String remoteHost = Constants.DEFAULT_SERVER_HOST;
 		private int remotePort = Constants.DEFAULT_SERVER_PORT;

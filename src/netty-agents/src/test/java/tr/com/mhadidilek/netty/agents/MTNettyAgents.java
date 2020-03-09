@@ -12,7 +12,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import nettyagents.PeerContext;
+import nettyagents.Utils;
 import nettyagents.agents.ClientAgent;
 import nettyagents.agents.ServerAgent;
 import tr.com.mhadidilek.netty.agents.TestData.SampleMessage;
@@ -23,6 +25,10 @@ public class MTNettyAgents {
 
 	private static ServerAgent serverAgent;
 	private static ClientAgent clientAgent;
+	private static String serverPriKey;
+	private static String serverCert;
+	private static String clientPriKey;
+	private static String clientCert;
 
 	// ---
 
@@ -72,13 +78,29 @@ public class MTNettyAgents {
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		serverAgent = new ServerAgent();
-		serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
-		serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
+		{
+			SelfSignedCertificate cert = new SelfSignedCertificate();
+			serverPriKey = Utils.base64Encode(cert.key().getEncoded());
+			serverCert = Utils.base64Encode(cert.cert().getEncoded());
 
-		clientAgent = new ClientAgent();
-		clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
-		clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
+			serverAgent = new ServerAgent();
+			serverAgent.getConfig().setPriKey(serverPriKey);
+			serverAgent.getConfig().setCert(serverCert);
+			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
+			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
+		}
+
+		{
+			SelfSignedCertificate cert = new SelfSignedCertificate();
+			clientPriKey = Utils.base64Encode(cert.key().getEncoded());
+			clientCert = Utils.base64Encode(cert.cert().getEncoded());
+
+			clientAgent = new ClientAgent();
+			clientAgent.getConfig().setPriKey(clientPriKey);
+			clientAgent.getConfig().setCert(clientCert);
+			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
+			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
+		}
 	}
 
 	private static void handleMessageOnServer(SampleMessage message) {

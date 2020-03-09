@@ -6,7 +6,6 @@ package nettyagents;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 
@@ -24,8 +23,8 @@ public class MessageSender {
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext, int timeoutSec) {
 		try {
-			while (peerContext.getChannelHandlerContext() == null) {
-				TimeUnit.SECONDS.sleep(1);
+			if (!Utils.waitUntil(() -> peerContext.getChannelHandlerContext() != null, Constants.DEFAULT_CHANNEL_WAIT_SEC)) {
+				return null;
 			}
 
 			MessageWrapper requestWrapper = MessageWrapper.createRequest(request);
@@ -57,13 +56,15 @@ public class MessageSender {
 	}
 
 	public <T extends AbstractMessage> boolean sendMessage(T message, PeerContext peerContext) {
-		try {
-			MessageWrapper messageWrapper = MessageWrapper.create(message);
-			peerContext.getChannelHandlerContext().writeAndFlush(messageWrapper);
-			return true;
-		} catch (Exception e) {
-			// TODO [hadi] Handle exception
-			this.logger.error(e.getLocalizedMessage(), e);
+		if (Utils.waitUntil(() -> peerContext.getChannelHandlerContext() != null, Constants.DEFAULT_CHANNEL_WAIT_SEC)) {
+			try {
+				MessageWrapper messageWrapper = MessageWrapper.create(message);
+				peerContext.getChannelHandlerContext().writeAndFlush(messageWrapper);
+				return true;
+			} catch (Exception e) {
+				// TODO [hadi] Handle exception
+				this.logger.error(e.getLocalizedMessage(), e);
+			}
 		}
 		return false;
 	}
