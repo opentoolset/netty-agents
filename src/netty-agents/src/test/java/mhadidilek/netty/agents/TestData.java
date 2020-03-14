@@ -2,7 +2,7 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package tr.com.mhadidilek.netty.agents;
+package mhadidilek.netty.agents;
 
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;

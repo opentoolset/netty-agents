@@ -4,13 +4,12 @@
 // ---
 package nettyagents.agents;
 
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.net.ssl.SSLException;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -23,6 +22,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import nettyagents.AbstractAgent;
@@ -73,8 +73,13 @@ public class ServerAgent extends AbstractAgent {
 			try {
 				PrivateKey key = getConfig().getPriKey();
 				X509Certificate cert = getConfig().getCert();
-				setSslContext(SslContextBuilder.forServer(key, cert).trustManager(new TrustManager()).build());
-			} catch (SSLException e) {
+
+				SslContextBuilder builder = SslContextBuilder.forServer(key, cert);
+				builder.trustManager(new TrustManager());
+				builder.clientAuth(ClientAuth.REQUIRE);
+				SslContext sslContext = builder.build();
+				setSslContext(sslContext);
+			} catch (IOException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
 		}

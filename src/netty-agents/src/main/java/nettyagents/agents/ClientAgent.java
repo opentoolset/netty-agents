@@ -4,13 +4,19 @@
 // ---
 package nettyagents.agents;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
+import javax.net.ssl.KeyManagerFactory;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -37,6 +43,8 @@ import nettyagents.PeerContext;
 
 public class ClientAgent extends AbstractAgent {
 
+	private static final String DEFAULT_IN_MEMORY_KEYSTORE_PW = "";
+
 	private EventLoopGroup workerGroup = new NioEventLoopGroup();
 	private Bootstrap bootstrap = new Bootstrap();
 
@@ -45,7 +53,7 @@ public class ClientAgent extends AbstractAgent {
 	private PeerContext peerContext = new PeerContext();
 
 	private boolean shutdownRequested = false;
-	private SSLEngine sslEngine;
+	// private SSLEngine sslEngine;
 
 	// ---
 
@@ -65,17 +73,29 @@ public class ClientAgent extends AbstractAgent {
 
 		if (Context.sslEnabled) {
 			try {
-				// SSLContext sslContext = SSLContext.getInstance("TLS");
-				// sslContext.init(null, ArrayUtils.toArray(new TrustManager()), null);
-				//
-				// sslEngine = sslContext.createSSLEngine();
-				// sslEngine.setUseClientMode(false);
-				// sslEngine.setNeedClientAuth(true);
+				{
+					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+					{
+						KeyStore keystore = KeyStore.getInstance("JKS");
+						{
+							PrivateKey key = getConfig().getPriKey();
+							X509Certificate cert = getConfig().getCert();
 
-				PrivateKey key = getConfig().getPriKey();
-				X509Certificate cert = getConfig().getCert();
-				setSslContext(SslContextBuilder.forClient().trustManager(new TrustManager()).build());
-			} catch (SSLException e) {
+							keystore.load(null);
+							keystore.setCertificateEntry("my-cert", cert);
+							keystore.setKeyEntry("my-key", key, DEFAULT_IN_MEMORY_KEYSTORE_PW.toCharArray(), new Certificate[] { cert });
+						}
+
+						keyManagerFactory.init(keystore, DEFAULT_IN_MEMORY_KEYSTORE_PW.toCharArray());
+					}
+
+					SslContextBuilder builder = SslContextBuilder.forClient();
+					builder.keyManager(keyManagerFactory);
+					builder.trustManager(new TrustManager());
+					SslContext sslContext = builder.build();
+					setSslContext(sslContext);
+				}
+			} catch (NoSuchAlgorithmException | KeyStoreException | CertificateException | IOException | UnrecoverableKeyException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
 		}
@@ -94,7 +114,7 @@ public class ClientAgent extends AbstractAgent {
 
 					SslContext sslContext = getSslContext();
 					if (sslContext != null) {
-						pipeline.addLast(sslContext.newHandler(channel.alloc(), config.getRemoteHost(), config.getRemotePort()));
+						pipeline.addLast(sslContext.newHandler(channel.alloc(), getConfig().getRemoteHost(), getConfig().getRemotePort()));
 					}
 
 					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));

@@ -2,7 +2,7 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package tr.com.mhadidilek.netty.agents;
+package mhadidilek.netty.agents;
 
 import java.net.SocketAddress;
 import java.util.Map;
@@ -13,13 +13,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import mhadidilek.netty.agents.TestData.SampleMessage;
+import mhadidilek.netty.agents.TestData.SampleRequest;
+import mhadidilek.netty.agents.TestData.SampleResponse;
 import nettyagents.PeerContext;
 import nettyagents.Utils;
 import nettyagents.agents.ClientAgent;
 import nettyagents.agents.ServerAgent;
-import tr.com.mhadidilek.netty.agents.TestData.SampleMessage;
-import tr.com.mhadidilek.netty.agents.TestData.SampleRequest;
-import tr.com.mhadidilek.netty.agents.TestData.SampleResponse;
 
 public class MTNettyAgents {
 
