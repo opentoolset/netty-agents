@@ -2,6 +2,7 @@ package nettyagents;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
@@ -55,24 +56,23 @@ public class Utils {
 			CertPathValidator certPathValidator = CertPathValidator.getInstance("PKIX");
 
 			for (Peer trustedPeer : trustedPeers) {
-				Set<TrustAnchor> trustAnchors = new HashSet<>();
-				TrustAnchor trustAnchor = buildTrustAnchor(trustedPeer.getCert());
-				trustAnchors.add(trustAnchor);
-
-				PKIXParameters params = new PKIXParameters(trustAnchors);
-				params.setRevocationEnabled(false);
-
 				try {
+					Set<TrustAnchor> trustAnchors = new HashSet<>();
+					TrustAnchor trustAnchor = buildTrustAnchor(trustedPeer.getCert());
+					trustAnchors.add(trustAnchor);
+
+					PKIXParameters params = new PKIXParameters(trustAnchors);
+					params.setRevocationEnabled(false);
 
 					PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, params);
 					PublicKey publicKey = result.getPublicKey();
 					Context.getLogger().info("Certificate verified. Public key: {}", publicKey);
 					return;
-				} catch (Exception e) {
+				} catch (GeneralSecurityException | IOException e) {
 					Context.getLogger().debug(e.getLocalizedMessage(), e);
 				}
 			}
-		} catch (GeneralSecurityException | IOException e) {
+		} catch (NoSuchAlgorithmException e) {
 			Context.getLogger().error(e.getLocalizedMessage(), e);
 		}
 
