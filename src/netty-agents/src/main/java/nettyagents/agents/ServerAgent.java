@@ -49,8 +49,6 @@ public class ServerAgent extends AbstractAgent {
 
 	private boolean shutdownRequested = false;
 
-	private SslHandler sslHandler;
-
 	// ---
 
 	/**
@@ -94,6 +92,8 @@ public class ServerAgent extends AbstractAgent {
 		this.bootstrap.channel(NioServerSocketChannel.class);
 		this.bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
 
+			private SslHandler sslHandler;
+
 			@Override
 			public void initChannel(SocketChannel channel) throws Exception {
 				try {
@@ -101,8 +101,8 @@ public class ServerAgent extends AbstractAgent {
 
 					SslContext sslContext = getSslContext();
 					if (sslContext != null) {
-						ServerAgent.this.sslHandler = sslContext.newHandler(channel.alloc());
-						pipeline.addLast(ServerAgent.this.sslHandler);
+						sslHandler = sslContext.newHandler(channel.alloc());
+						pipeline.addLast(sslHandler);
 					}
 
 					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
@@ -113,7 +113,6 @@ public class ServerAgent extends AbstractAgent {
 							SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
 							if (Context.sslEnabled) {
-								SslHandler sslHandler = ServerAgent.this.sslHandler;
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										javax.security.cert.X509Certificate[] peerCertChain = sslHandler.engine().getSession().getPeerCertificateChain();

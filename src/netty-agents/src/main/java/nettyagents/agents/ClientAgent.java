@@ -52,8 +52,6 @@ public class ClientAgent extends AbstractAgent {
 
 	private boolean shutdownRequested = false;
 
-	private SslHandler sslHandler;
-
 	// ---
 
 	/**
@@ -111,6 +109,8 @@ public class ClientAgent extends AbstractAgent {
 		this.bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
 		this.bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 
+			private SslHandler sslHandler;
+
 			@Override
 			public void initChannel(SocketChannel channel) throws Exception {
 				try {
@@ -118,8 +118,8 @@ public class ClientAgent extends AbstractAgent {
 
 					SslContext sslContext = getSslContext();
 					if (sslContext != null) {
-						ClientAgent.this.sslHandler = sslContext.newHandler(channel.alloc(), getConfig().getRemoteHost(), getConfig().getRemotePort());
-						pipeline.addLast(ClientAgent.this.sslHandler);
+						sslHandler = sslContext.newHandler(channel.alloc(), getConfig().getRemoteHost(), getConfig().getRemotePort());
+						pipeline.addLast(sslHandler);
 					}
 
 					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
@@ -128,7 +128,6 @@ public class ClientAgent extends AbstractAgent {
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 							if (Context.sslEnabled) {
-								SslHandler sslHandler = ClientAgent.this.sslHandler;
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										javax.security.cert.X509Certificate[] peerCertChain = sslHandler.engine().getSession().getPeerCertificateChain();

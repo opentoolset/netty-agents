@@ -126,6 +126,8 @@ public class MTNettyAgents {
 
 		clientAgent.shutdown();
 		serverAgent.shutdown();
+		
+		TimeUnit.SECONDS.sleep(1);
 	}
 
 	// ---
