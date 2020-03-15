@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.netty.handler.ssl.util.SelfSignedCertificate;
@@ -25,21 +24,19 @@ import nettyagents.agents.ServerAgent;
 
 public class MTNettyAgents {
 
-	private static ServerAgent serverAgent;
-	private static ClientAgent clientAgent;
-	private static String serverPriKey;
-	private static String serverCert;
-	private static String clientPriKey;
-	private static String clientCert;
-
 	// ---
 
 	@Test
 	public void testWithTLS() throws Exception {
+		System.out.println("Testing with TLS ...");
+
+		ServerAgent serverAgent = new ServerAgent();
+		ClientAgent clientAgent = new ClientAgent();
+
 		{
 			SelfSignedCertificate cert = new SelfSignedCertificate();
-			serverPriKey = Utils.base64Encode(cert.key().getEncoded());
-			serverCert = Utils.base64Encode(cert.cert().getEncoded());
+			String serverPriKey = Utils.base64Encode(cert.key().getEncoded());
+			String serverCert = Utils.base64Encode(cert.cert().getEncoded());
 
 			serverAgent.getConfig().setPriKey(serverPriKey);
 			serverAgent.getConfig().setCert(serverCert);
@@ -49,8 +46,8 @@ public class MTNettyAgents {
 
 		{
 			SelfSignedCertificate cert = new SelfSignedCertificate();
-			clientPriKey = Utils.base64Encode(cert.key().getEncoded());
-			clientCert = Utils.base64Encode(cert.cert().getEncoded());
+			String clientPriKey = Utils.base64Encode(cert.key().getEncoded());
+			String clientCert = Utils.base64Encode(cert.cert().getEncoded());
 
 			clientAgent.getConfig().setPriKey(clientPriKey);
 			clientAgent.getConfig().setCert(clientCert);
@@ -58,18 +55,33 @@ public class MTNettyAgents {
 			serverAgent.getConfig().getTrustedPeers().add(new Peer(clientCert));
 		}
 
-		doAgentOperations();
+		doAgentOperations(serverAgent, clientAgent);
 	}
 
 	@Test
 	public void testWithNoTLS() throws Exception {
+		System.out.println("Testing with TLS ...");
+
+		ServerAgent serverAgent = new ServerAgent();
+		ClientAgent clientAgent = new ClientAgent();
+
 		Context.sslEnabled = false;
-		doAgentOperations();
+		doAgentOperations(serverAgent, clientAgent);
 	}
 
 	// ---
 
-	private void doAgentOperations() throws InterruptedException {
+	private void doAgentOperations(ServerAgent serverAgent, ClientAgent clientAgent) throws InterruptedException {
+		{
+			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
+			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
+		}
+
+		{
+			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
+			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
+		}
+
 		serverAgent.startup();
 		clientAgent.startup();
 
@@ -119,21 +131,6 @@ public class MTNettyAgents {
 	}
 
 	// ---
-
-	@BeforeClass
-	public static void beforeClass() throws Exception {
-		{
-			serverAgent = new ServerAgent();
-			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
-			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
-		}
-
-		{
-			clientAgent = new ClientAgent();
-			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
-			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
-		}
-	}
 
 	private static void handleMessageOnServer(SampleMessage message) {
 		System.out.printf("Message received on server: %s\n", message);
