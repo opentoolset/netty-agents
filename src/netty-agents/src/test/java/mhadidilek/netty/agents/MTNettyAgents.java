@@ -17,6 +17,7 @@ import mhadidilek.netty.agents.TestData.SampleMessage;
 import mhadidilek.netty.agents.TestData.SampleRequest;
 import mhadidilek.netty.agents.TestData.SampleResponse;
 import nettyagents.AbstractAgent.AbstractConfig.Peer;
+import nettyagents.Context;
 import nettyagents.PeerContext;
 import nettyagents.Utils;
 import nettyagents.agents.ClientAgent;
@@ -34,7 +35,41 @@ public class MTNettyAgents {
 	// ---
 
 	@Test
-	public void test() throws Exception {
+	public void testWithTLS() throws Exception {
+		{
+			SelfSignedCertificate cert = new SelfSignedCertificate();
+			serverPriKey = Utils.base64Encode(cert.key().getEncoded());
+			serverCert = Utils.base64Encode(cert.cert().getEncoded());
+
+			serverAgent.getConfig().setPriKey(serverPriKey);
+			serverAgent.getConfig().setCert(serverCert);
+
+			clientAgent.getConfig().getTrustedPeers().add(new Peer(serverCert));
+		}
+
+		{
+			SelfSignedCertificate cert = new SelfSignedCertificate();
+			clientPriKey = Utils.base64Encode(cert.key().getEncoded());
+			clientCert = Utils.base64Encode(cert.cert().getEncoded());
+
+			clientAgent.getConfig().setPriKey(clientPriKey);
+			clientAgent.getConfig().setCert(clientCert);
+
+			serverAgent.getConfig().getTrustedPeers().add(new Peer(clientCert));
+		}
+
+		doAgentOperations();
+	}
+
+	@Test
+	public void testWithNoTLS() throws Exception {
+		Context.sslEnabled = false;
+		doAgentOperations();
+	}
+
+	// ---
+
+	private void doAgentOperations() throws InterruptedException {
 		serverAgent.startup();
 		clientAgent.startup();
 
@@ -56,13 +91,6 @@ public class MTNettyAgents {
 			}
 		}
 
-		messaging(clients);
-
-		clientAgent.shutdown();
-		serverAgent.shutdown();
-	}
-
-	private void messaging(Map<SocketAddress, PeerContext> clients) {
 		PeerContext client = clients.values().iterator().next();
 		System.out.printf("Client: %s\n", client);
 
@@ -85,39 +113,25 @@ public class MTNettyAgents {
 			System.out.printf("Response received from client: %s\n", response);
 			Assert.assertNotNull(response);
 		}
+
+		clientAgent.shutdown();
+		serverAgent.shutdown();
 	}
 
 	// ---
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		serverAgent = new ServerAgent();
-		clientAgent = new ClientAgent();
-
 		{
-			SelfSignedCertificate cert = new SelfSignedCertificate();
-			serverPriKey = Utils.base64Encode(cert.key().getEncoded());
-			serverCert = Utils.base64Encode(cert.cert().getEncoded());
-
-			serverAgent.getConfig().setPriKey(serverPriKey);
-			serverAgent.getConfig().setCert(serverCert);
+			serverAgent = new ServerAgent();
 			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
 			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
-
-			clientAgent.getConfig().getTrustedPeers().add(new Peer(serverCert));
 		}
 
 		{
-			SelfSignedCertificate cert = new SelfSignedCertificate();
-			clientPriKey = Utils.base64Encode(cert.key().getEncoded());
-			clientCert = Utils.base64Encode(cert.cert().getEncoded());
-
-			clientAgent.getConfig().setPriKey(clientPriKey);
-			clientAgent.getConfig().setCert(clientCert);
+			clientAgent = new ClientAgent();
 			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
 			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
-
-			serverAgent.getConfig().getTrustedPeers().add(new Peer(clientCert));
 		}
 	}
 

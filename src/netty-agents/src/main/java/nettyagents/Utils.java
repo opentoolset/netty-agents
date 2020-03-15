@@ -65,11 +65,12 @@ public class Utils {
 					params.setRevocationEnabled(false);
 
 					PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, params);
+					@SuppressWarnings("unused")
 					PublicKey publicKey = result.getPublicKey();
-					Context.getLogger().info("Certificate verified. Public key: {}", publicKey);
+					// Context.getLogger().info("Certificate verified. Public key: {}", publicKey);
 					return;
 				} catch (GeneralSecurityException | IOException e) {
-					Context.getLogger().debug(e.getLocalizedMessage(), e);
+					// Context.getLogger().debug(e.getLocalizedMessage(), e);
 				}
 			}
 		} catch (NoSuchAlgorithmException e) {
