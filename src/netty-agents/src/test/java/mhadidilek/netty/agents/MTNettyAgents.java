@@ -47,6 +47,14 @@ public class MTNettyAgents {
 			}
 		}
 
+		while (true) {
+			if (clientAgent.getServerContext().getChannelHandlerContext() != null) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		}
+		
 		PeerContext client = clients.values().iterator().next();
 		System.out.printf("Client: %s\n", client);
 

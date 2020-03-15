@@ -11,6 +11,8 @@ import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.net.ssl.SSLEngine;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
@@ -25,6 +27,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
 import nettyagents.AbstractAgent;
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;
@@ -97,7 +100,41 @@ public class ServerAgent extends AbstractAgent {
 
 					SslContext sslContext = getSslContext();
 					if (sslContext != null) {
-						pipeline.addLast(sslContext.newHandler(channel.alloc()));
+
+						// sslContext.newHandler(channel.alloc());
+
+						SSLEngine engine = sslContext.newEngine(channel.alloc());
+						SslHandler sslHandler = new SslHandler(engine) {
+
+							@Override
+							public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+								super.handlerAdded(ctx);
+
+								this.handshakeFuture().addListener(future -> {
+									SocketAddress remoteAddress = ctx.channel().remoteAddress();
+									javax.security.cert.X509Certificate[] peerCertChain = engine.getSession().getPeerCertificateChain();
+									javax.security.cert.X509Certificate peerCert = peerCertChain[0];
+									ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, peerCert));
+								});
+							}
+
+							// @Override
+							// public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+							// // super.userEventTriggered(ctx, evt);
+							//
+							// if (evt instanceof SslHandshakeCompletionEvent) {
+							// SslHandshakeCompletionEvent sslHandshakeCompletionEvent = (SslHandshakeCompletionEvent) evt;
+							// if (sslHandshakeCompletionEvent.isSuccess()) {
+							// SocketAddress remoteAddress = ctx.channel().remoteAddress();
+							// PeerContext peerContext = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx));
+							// javax.security.cert.X509Certificate[] peerCertChain = this.engine().getSession().getPeerCertificateChain();
+							// javax.security.cert.X509Certificate peerCert = peerCertChain[0];
+							// }
+							// }
+							// }
+						};
+
+						pipeline.addLast(sslHandler);
 					}
 
 					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
@@ -106,7 +143,9 @@ public class ServerAgent extends AbstractAgent {
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 							SocketAddress remoteAddress = ctx.channel().remoteAddress();
-							ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx));
+							if (!Context.sslEnabled) {
+								ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, null));
+							}
 						}
 
 						@Override
@@ -162,10 +201,11 @@ public class ServerAgent extends AbstractAgent {
 		}
 	}
 
-	private PeerContext addOrUpdateClientContext(SocketAddress key, PeerContext value, ChannelHandlerContext channelHandlerContext) {
-		value = value != null ? value : new PeerContext();
-		value.setChannelHandlerContext(channelHandlerContext);
-		return value;
+	private PeerContext addOrUpdateClientContext(SocketAddress key, PeerContext peerContext, ChannelHandlerContext channelHandlerContext, javax.security.cert.X509Certificate peerCert) {
+		peerContext = peerContext != null ? peerContext : new PeerContext();
+		peerContext.setChannelHandlerContext(channelHandlerContext);
+		peerContext.setCert(peerCert);
+		return peerContext;
 	}
 
 	public class Config extends AbstractConfig {

@@ -17,6 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLEngine;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -31,6 +32,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
 import nettyagents.AbstractAgent;
 import nettyagents.AbstractMessage;
 import nettyagents.AbstractRequest;
@@ -66,6 +68,10 @@ public class ClientAgent extends AbstractAgent {
 	 */
 	public Config getConfig() {
 		return config;
+	}
+	
+	public PeerContext getServerContext() {
+		return peerContext;
 	}
 
 	public void startup() {
@@ -114,7 +120,41 @@ public class ClientAgent extends AbstractAgent {
 
 					SslContext sslContext = getSslContext();
 					if (sslContext != null) {
-						pipeline.addLast(sslContext.newHandler(channel.alloc(), getConfig().getRemoteHost(), getConfig().getRemotePort()));
+
+						// sslContext.newHandler(channel.alloc());
+
+						SSLEngine engine = sslContext.newEngine(channel.alloc(), getConfig().getRemoteHost(), getConfig().getRemotePort());
+						SslHandler sslHandler = new SslHandler(engine) {
+
+							@Override
+							public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+								super.handlerAdded(ctx);
+
+								this.handshakeFuture().addListener(future -> {
+									javax.security.cert.X509Certificate[] peerCertChain = engine.getSession().getPeerCertificateChain();
+									javax.security.cert.X509Certificate peerCert = peerCertChain[0];
+									ClientAgent.this.peerContext.setChannelHandlerContext(ctx);
+									ClientAgent.this.peerContext.setCert(peerCert);
+								});
+							}
+
+							// @Override
+							// public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+							// // super.userEventTriggered(ctx, evt);
+							//
+							// if (evt instanceof SslHandshakeCompletionEvent) {
+							// SslHandshakeCompletionEvent sslHandshakeCompletionEvent = (SslHandshakeCompletionEvent) evt;
+							// if (sslHandshakeCompletionEvent.isSuccess()) {
+							// SocketAddress remoteAddress = ctx.channel().remoteAddress();
+							// PeerContext peerContext = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx));
+							// javax.security.cert.X509Certificate[] peerCertChain = this.engine().getSession().getPeerCertificateChain();
+							// javax.security.cert.X509Certificate peerCert = peerCertChain[0];
+							// }
+							// }
+							// }
+						};
+
+						pipeline.addLast(sslHandler);
 					}
 
 					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
@@ -122,7 +162,9 @@ public class ClientAgent extends AbstractAgent {
 
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-							ClientAgent.this.peerContext.setChannelHandlerContext(ctx);
+							if (!Context.sslEnabled) {
+								ClientAgent.this.peerContext.setChannelHandlerContext(ctx);
+							}
 						}
 
 						@Override

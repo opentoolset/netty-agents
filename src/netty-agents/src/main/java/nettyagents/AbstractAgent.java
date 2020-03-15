@@ -48,12 +48,12 @@ public abstract class AbstractAgent {
 	protected Context getContext() {
 		return context;
 	}
-	
-	public SslContext getSslContext() {
+
+	protected SslContext getSslContext() {
 		return sslContext;
 	}
-	
-	public void setSslContext(SslContext sslContext) {
+
+	protected void setSslContext(SslContext sslContext) {
 		this.sslContext = sslContext;
 	}
 
@@ -113,13 +113,13 @@ public abstract class AbstractAgent {
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			System.out.println(chain);
+			System.out.println(chain[0]);
 			System.out.println(authType);
 		}
 
 		@Override
 		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			System.out.println(chain);
+			System.out.println(chain[0]);
 			System.out.println(authType);
 		}
 
