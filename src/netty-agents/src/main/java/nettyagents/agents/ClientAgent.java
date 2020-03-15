@@ -6,13 +6,10 @@ package nettyagents.agents;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
@@ -97,11 +94,11 @@ public class ClientAgent extends AbstractAgent {
 
 					SslContextBuilder builder = SslContextBuilder.forClient();
 					builder.keyManager(keyManagerFactory);
-					builder.trustManager(new TrustManager());
+					builder.trustManager(new TrustManager(getConfig().getTrustedPeers()));
 					SslContext sslContext = builder.build();
 					setSslContext(sslContext);
 				}
-			} catch (NoSuchAlgorithmException | KeyStoreException | CertificateException | IOException | UnrecoverableKeyException e) {
+			} catch (IOException | GeneralSecurityException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
 		}

@@ -6,6 +6,7 @@ package nettyagents.agents;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Map;
@@ -78,11 +79,11 @@ public class ServerAgent extends AbstractAgent {
 				X509Certificate cert = getConfig().getCert();
 
 				SslContextBuilder builder = SslContextBuilder.forServer(key, cert);
-				builder.trustManager(new TrustManager());
+				builder.trustManager(new TrustManager(getConfig().getTrustedPeers()));
 				builder.clientAuth(ClientAuth.REQUIRE);
 				SslContext sslContext = builder.build();
 				setSslContext(sslContext);
-			} catch (IOException e) {
+			} catch (IOException | GeneralSecurityException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
 		}
@@ -208,7 +209,7 @@ public class ServerAgent extends AbstractAgent {
 		return peerContext;
 	}
 
-	public class Config extends AbstractConfig {
+	public static class Config extends AbstractConfig {
 
 		private int localPort = Constants.DEFAULT_SERVER_PORT;
 

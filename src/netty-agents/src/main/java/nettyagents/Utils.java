@@ -1,8 +1,25 @@
 package nettyagents;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+import java.security.cert.CertPath;
+import java.security.cert.CertPathValidator;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.PKIXCertPathValidatorResult;
+import java.security.cert.PKIXParameters;
+import java.security.cert.TrustAnchor;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import nettyagents.AbstractAgent.AbstractConfig.Peer;
 
 public class Utils {
 
@@ -27,5 +44,43 @@ public class Utils {
 
 	public static byte[] base64Decode(String str) {
 		return Base64.getDecoder().decode(str);
+	}
+
+	public static void verifyCertChain(X509Certificate[] peerCertChain, List<Peer> trustedPeers) throws CertificateException {
+		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+		X509Certificate certPEM = peerCertChain[0];
+		CertPath certPath = certFactory.generateCertPath(Arrays.asList(certPEM));
+
+		try {
+			CertPathValidator certPathValidator = CertPathValidator.getInstance("PKIX");
+
+			for (Peer trustedPeer : trustedPeers) {
+				Set<TrustAnchor> trustAnchors = new HashSet<>();
+				TrustAnchor trustAnchor = buildTrustAnchor(trustedPeer.getCert());
+				trustAnchors.add(trustAnchor);
+
+				try {
+					PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, new PKIXParameters(trustAnchors));
+					PublicKey publicKey = result.getPublicKey();
+					Context.getLogger().info("Certificate verified. Public key: {}", publicKey);
+					return;
+				} catch (Exception e) {
+				}
+			}
+		} catch (GeneralSecurityException | IOException e) {
+			Context.getLogger().error(e.getLocalizedMessage(), e);
+		}
+
+		throw new CertificateException("Certificate couldn't be verified by custom trust manager...");
+	}
+
+	// ---
+
+	private static TrustAnchor buildTrustAnchor(String peerCertStr) throws GeneralSecurityException, IOException {
+		byte[] peerCertBytes = Utils.base64Decode(peerCertStr);
+		@SuppressWarnings("restriction")
+		sun.security.x509.X509CertImpl peerCert = new sun.security.x509.X509CertImpl(peerCertBytes);
+		TrustAnchor trustAnchor = new TrustAnchor(peerCert, null);
+		return trustAnchor;
 	}
 }

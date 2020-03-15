@@ -4,11 +4,15 @@
 // ---
 package nettyagents;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -17,6 +21,7 @@ import javax.net.ssl.X509TrustManager;
 import org.slf4j.Logger;
 
 import io.netty.handler.ssl.SslContext;
+import nettyagents.AbstractAgent.AbstractConfig.Peer;
 
 public abstract class AbstractAgent {
 
@@ -49,11 +54,11 @@ public abstract class AbstractAgent {
 		return context;
 	}
 
-	protected SslContext getSslContext() {
+	public SslContext getSslContext() {
 		return sslContext;
 	}
 
-	protected void setSslContext(SslContext sslContext) {
+	public void setSslContext(SslContext sslContext) {
 		this.sslContext = sslContext;
 	}
 
@@ -64,6 +69,8 @@ public abstract class AbstractAgent {
 		private PrivateKey priKey;
 		private X509Certificate cert;
 
+		private List<Peer> trustedPpeers = new ArrayList<>();
+
 		// ---
 
 		public PrivateKey getPriKey() {
@@ -72,6 +79,10 @@ public abstract class AbstractAgent {
 
 		public X509Certificate getCert() {
 			return cert;
+		}
+
+		public List<Peer> getTrustedPeers() {
+			return trustedPpeers;
 		}
 
 		// ---
@@ -105,22 +116,51 @@ public abstract class AbstractAgent {
 			this.cert = cert;
 			return this;
 		}
+
+		public static class Peer {
+
+			private String id;
+			private String ipAddress;
+			private String cert;
+
+			public Peer(String id, String ipAddress, String cert) {
+				this.id = id;
+				this.ipAddress = ipAddress;
+				this.cert = cert;
+			}
+
+			public String getId() {
+				return id;
+			}
+
+			public String getIpAddress() {
+				return ipAddress;
+			}
+
+			public String getCert() {
+				return cert;
+			}
+		}
 	}
 
 	// ---
 
 	public static class TrustManager implements X509TrustManager {
 
-		@Override
-		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			System.out.println(chain[0]);
-			System.out.println(authType);
+		private List<Peer> trustedPeers = new ArrayList<>();
+
+		public TrustManager(List<Peer> trustedPeers) throws GeneralSecurityException, IOException {
+			this.trustedPeers = trustedPeers;
 		}
 
 		@Override
-		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			System.out.println(chain[0]);
-			System.out.println(authType);
+		public void checkClientTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
+			Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+		}
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
+			Utils.verifyCertChain(peerCertChain, this.trustedPeers);
 		}
 
 		@Override
