@@ -128,8 +128,8 @@ public class ClientAgent extends AbstractAgent {
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 							logger.info("----- handler added on client - ctx: {}", ctx.toString());
-							SslHandler sslHandler = ClientAgent.this.sslHandler;
-							if (sslHandler != null) {
+							if (Context.sslEnabled) {
+								SslHandler sslHandler = ClientAgent.this.sslHandler;
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										logger.info("----- handshake completed on client - ctx: {}", ctx.toString());

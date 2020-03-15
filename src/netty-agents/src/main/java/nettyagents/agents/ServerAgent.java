@@ -113,11 +113,11 @@ public class ServerAgent extends AbstractAgent {
 							logger.info("----- handler added on server - ctx: {}", ctx.toString());
 							SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
-							SslHandler sslHandler = ServerAgent.this.sslHandler;
-							if (sslHandler != null) {
+							if (Context.sslEnabled) {
+								SslHandler sslHandler = ServerAgent.this.sslHandler;
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
-										logger.info("----- handshake completed on client - ctx: {}", ctx.toString());
+										logger.info("----- handshake completed on server - ctx: {}", ctx.toString());
 										javax.security.cert.X509Certificate[] peerCertChain = sslHandler.engine().getSession().getPeerCertificateChain();
 										javax.security.cert.X509Certificate peerCert = peerCertChain[0];
 										ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, peerCert));
