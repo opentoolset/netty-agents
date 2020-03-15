@@ -113,7 +113,8 @@ public class ServerAgent extends AbstractAgent {
 							logger.info("----- handler added on server - ctx: {}", ctx.toString());
 							SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
-							if (ServerAgent.this.sslHandler != null) {
+							SslHandler sslHandler = ServerAgent.this.sslHandler;
+							if (sslHandler != null) {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										logger.info("----- handshake completed on client - ctx: {}", ctx.toString());

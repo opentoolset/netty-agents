@@ -128,8 +128,9 @@ public class ClientAgent extends AbstractAgent {
 						@Override
 						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 							logger.info("----- handler added on client - ctx: {}", ctx.toString());
-							if (ClientAgent.this.sslHandler != null) {
-								ClientAgent.this.sslHandler.handshakeFuture().addListener(future -> {
+							SslHandler sslHandler = ClientAgent.this.sslHandler;
+							if (sslHandler != null) {
+								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										logger.info("----- handshake completed on client - ctx: {}", ctx.toString());
 										javax.security.cert.X509Certificate[] peerCertChain = sslHandler.engine().getSession().getPeerCertificateChain();
