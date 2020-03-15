@@ -24,7 +24,16 @@ import nettyagents.agents.ServerAgent;
 
 public class MTNettyAgents {
 
-	// ---
+	@Test
+	public void testWithNoTLS() throws Exception {
+		System.out.println("Testing with TLS ...");
+
+		ServerAgent serverAgent = new ServerAgent();
+		ClientAgent clientAgent = new ClientAgent();
+
+		Context.sslEnabled = false;
+		doAgentOperations(serverAgent, clientAgent);
+	}
 
 	@Test
 	public void testWithTLS() throws Exception {
@@ -55,17 +64,6 @@ public class MTNettyAgents {
 			serverAgent.getConfig().getTrustedPeers().add(new Peer(clientCert));
 		}
 
-		doAgentOperations(serverAgent, clientAgent);
-	}
-
-	@Test
-	public void testWithNoTLS() throws Exception {
-		System.out.println("Testing with TLS ...");
-
-		ServerAgent serverAgent = new ServerAgent();
-		ClientAgent clientAgent = new ClientAgent();
-
-		Context.sslEnabled = false;
 		doAgentOperations(serverAgent, clientAgent);
 	}
 
