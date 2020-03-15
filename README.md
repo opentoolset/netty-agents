@@ -2,13 +2,12 @@
 
 Easy to use, message based and synchronous communication library based on Netty (https://netty.io/).
 
-## Project Objectives
-- Providing easy and ready-to-use communication agents based on Netty library
-- Eliminating repeating and boilerplate code when using Netty as a communication library
-- Supporting and providing design and usage of a strongly-typed and well-defined communication interface
-- Providing synchronous (request-response based) model for communication requiremens similar to REST 
-- Providing reliablity
-- Providing security
+## Features
+- Easy and ready-to-use communication agents based on Netty library
+- Eliminates repeated and boilerplate code when using Netty as a communication library
+- Supports design and usage of a strongly-typed and well-defined communication interfaces
+- Provides synchronous (blocking request-response based) model for communication requiremens similar to REST 
+- Provides security with TLS mutual certificate authentication
 
 ## Sample Use Case
 
