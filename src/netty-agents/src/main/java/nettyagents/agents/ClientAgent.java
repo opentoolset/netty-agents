@@ -71,6 +71,7 @@ public class ClientAgent extends AbstractAgent {
 		return peerContext;
 	}
 
+	@Override
 	public void startup() {
 		super.startup();
 
