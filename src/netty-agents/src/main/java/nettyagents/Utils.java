@@ -1,3 +1,7 @@
+// ---
+// Copyright 2020 netty-agents team
+// All rights reserved
+// ---
 package nettyagents;
 
 import java.io.IOException;
