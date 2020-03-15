@@ -16,6 +16,7 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import mhadidilek.netty.agents.TestData.SampleMessage;
 import mhadidilek.netty.agents.TestData.SampleRequest;
 import mhadidilek.netty.agents.TestData.SampleResponse;
+import nettyagents.AbstractAgent.AbstractConfig.Peer;
 import nettyagents.PeerContext;
 import nettyagents.Utils;
 import nettyagents.agents.ClientAgent;
@@ -54,7 +55,7 @@ public class MTNettyAgents {
 				TimeUnit.SECONDS.sleep(1);
 			}
 		}
-		
+
 		PeerContext client = clients.values().iterator().next();
 		System.out.printf("Client: %s\n", client);
 
@@ -86,16 +87,20 @@ public class MTNettyAgents {
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
+		serverAgent = new ServerAgent();
+		clientAgent = new ClientAgent();
+
 		{
 			SelfSignedCertificate cert = new SelfSignedCertificate();
 			serverPriKey = Utils.base64Encode(cert.key().getEncoded());
 			serverCert = Utils.base64Encode(cert.cert().getEncoded());
 
-			serverAgent = new ServerAgent();
 			serverAgent.getConfig().setPriKey(serverPriKey);
 			serverAgent.getConfig().setCert(serverCert);
 			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
 			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
+
+			clientAgent.getConfig().getTrustedPeers().add(new Peer(serverCert));
 		}
 
 		{
@@ -103,11 +108,12 @@ public class MTNettyAgents {
 			clientPriKey = Utils.base64Encode(cert.key().getEncoded());
 			clientCert = Utils.base64Encode(cert.cert().getEncoded());
 
-			clientAgent = new ClientAgent();
 			clientAgent.getConfig().setPriKey(clientPriKey);
 			clientAgent.getConfig().setCert(clientCert);
 			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
 			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
+
+			serverAgent.getConfig().getTrustedPeers().add(new Peer(clientCert));
 		}
 	}
 

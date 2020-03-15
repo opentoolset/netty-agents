@@ -123,7 +123,7 @@ public abstract class AbstractAgent {
 			private String ipAddress;
 			private String cert;
 
-			public Peer(String id, String ipAddress, String cert) {
+			public Peer(String cert) {
 				this.id = id;
 				this.ipAddress = ipAddress;
 				this.cert = cert;
