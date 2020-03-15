@@ -1,11 +1,11 @@
 # netty-agents
 
-Easy to use, message based and synchronous communication library based on Netty (https://netty.io/).
+Easy to use, message based, synchronous communication library based on Netty (https://netty.io/).
 
 ## Features
 - Easy and ready-to-use communication agents based on Netty library
 - Eliminates repeated and boilerplate code when using Netty as a communication library
-- Supports design and usage of a strongly-typed and well-defined communication interfaces
+- Supports design and usage of a strongly-typed, well-defined, message based communication interfaces
 - Provides bi-directional, synchronous (blocking request-response based) model for communication requiremens similar to REST while using stateful channels between each peers 
 - Provides security with TLS mutual certificate authentication
 - Supports multi-client connections
