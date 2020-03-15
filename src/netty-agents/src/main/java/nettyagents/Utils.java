@@ -59,12 +59,17 @@ public class Utils {
 				TrustAnchor trustAnchor = buildTrustAnchor(trustedPeer.getCert());
 				trustAnchors.add(trustAnchor);
 
+				PKIXParameters params = new PKIXParameters(trustAnchors);
+				params.setRevocationEnabled(false);
+
 				try {
-					PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, new PKIXParameters(trustAnchors));
+
+					PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, params);
 					PublicKey publicKey = result.getPublicKey();
 					Context.getLogger().info("Certificate verified. Public key: {}", publicKey);
 					return;
 				} catch (Exception e) {
+					Context.getLogger().debug(e.getLocalizedMessage(), e);
 				}
 			}
 		} catch (GeneralSecurityException | IOException e) {
