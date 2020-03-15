@@ -6,7 +6,7 @@ Easy to use, message based and synchronous communication library based on Netty 
 - Easy and ready-to-use communication agents based on Netty library
 - Eliminates repeated and boilerplate code when using Netty as a communication library
 - Supports design and usage of a strongly-typed and well-defined communication interfaces
-- Provides bi-directional, synchronous (blocking request-response based) model for communication requiremens similar to REST 
+- Provides bi-directional, synchronous (blocking request-response based) model for communication requiremens similar to REST while using single channel between each peers 
 - Provides security with TLS mutual certificate authentication
 - Supports multi-client connections
 
