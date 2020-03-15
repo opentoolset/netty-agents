@@ -49,13 +49,20 @@ public class MTNettyAgents {
 		}
 
 		while (true) {
-			if (clientAgent.getServerContext().getChannelHandlerContext() != null) {
+			if (clientAgent.getServer().getChannelHandlerContext() != null) {
 				break;
 			} else {
 				TimeUnit.SECONDS.sleep(1);
 			}
 		}
 
+		messaging(clients);
+
+		clientAgent.shutdown();
+		serverAgent.shutdown();
+	}
+
+	private void messaging(Map<SocketAddress, PeerContext> clients) {
 		PeerContext client = clients.values().iterator().next();
 		System.out.printf("Client: %s\n", client);
 
@@ -78,9 +85,6 @@ public class MTNettyAgents {
 			System.out.printf("Response received from client: %s\n", response);
 			Assert.assertNotNull(response);
 		}
-
-		clientAgent.shutdown();
-		serverAgent.shutdown();
 	}
 
 	// ---
