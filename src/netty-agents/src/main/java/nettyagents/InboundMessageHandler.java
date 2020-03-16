@@ -29,6 +29,10 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		if (Context.peerIdentificationMode) {
+			return;
+		}
+
 		if (msg instanceof MessageWrapper) {
 			MessageWrapper messageWrapper = (MessageWrapper) msg;
 

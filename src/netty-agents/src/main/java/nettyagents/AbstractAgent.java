@@ -45,6 +45,14 @@ public abstract class AbstractAgent {
 		this.context.getMessageReceiver().setMessageHandler(classOfMessage, consumer);
 	}
 
+	public void startPeerIdentificationMode() {
+		Context.peerIdentificationMode = true;
+	}
+
+	public void stopPeerIdentificationMode() {
+		Context.peerIdentificationMode = false;
+	}
+
 	// ---
 
 	protected void startup() {
@@ -54,11 +62,11 @@ public abstract class AbstractAgent {
 		return context;
 	}
 
-	public SslContext getSslContext() {
+	protected SslContext getSslContext() {
 		return sslContext;
 	}
 
-	public void setSslContext(SslContext sslContext) {
+	protected void setSslContext(SslContext sslContext) {
 		this.sslContext = sslContext;
 	}
 
@@ -88,12 +96,11 @@ public abstract class AbstractAgent {
 		// ---
 
 		public AbstractConfig setPriKey(String priKeyStr) throws InvalidKeyException {
-			return setPriKey(Utils.base64Decode(priKeyStr));
+			return setPriKey(Utils.buildPriKey(priKeyStr));
 		}
 
-		@SuppressWarnings("restriction")
 		public AbstractConfig setPriKey(byte[] priKeyBytes) throws InvalidKeyException {
-			RSAPrivateKey priKey = sun.security.rsa.RSAPrivateCrtKeyImpl.newKey(priKeyBytes);
+			RSAPrivateKey priKey = Utils.buildPriKey(priKeyBytes);
 			return setPriKey(priKey);
 		}
 
@@ -103,12 +110,11 @@ public abstract class AbstractAgent {
 		}
 
 		public AbstractConfig setCert(String certStr) throws CertificateException {
-			return setCert(Utils.base64Decode(certStr));
+			return setCert(Utils.buildCert(certStr));
 		}
 
-		@SuppressWarnings("restriction")
 		public AbstractConfig setCert(byte[] certBytes) throws CertificateException {
-			sun.security.x509.X509CertImpl cert = new sun.security.x509.X509CertImpl(certBytes);
+			X509Certificate cert = Utils.buildCert(certBytes);
 			return setCert(cert);
 		}
 
@@ -121,9 +127,9 @@ public abstract class AbstractAgent {
 
 			private String id;
 			private String ipAddress;
-			private String cert;
+			private X509Certificate cert;
 
-			public Peer(String cert) {
+			public Peer(X509Certificate cert) {
 				this.id = id;
 				this.ipAddress = ipAddress;
 				this.cert = cert;
@@ -137,7 +143,7 @@ public abstract class AbstractAgent {
 				return ipAddress;
 			}
 
-			public String getCert() {
+			public X509Certificate getCert() {
 				return cert;
 			}
 		}
@@ -155,12 +161,16 @@ public abstract class AbstractAgent {
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+			if (!Context.peerIdentificationMode) {
+				Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+			}
 		}
 
 		@Override
 		public void checkServerTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+			if (!Context.peerIdentificationMode) {
+				Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+			}
 		}
 
 		@Override

@@ -5,7 +5,11 @@
 package mhadidilek.netty.agents;
 
 import java.net.SocketAddress;
+import java.security.InvalidKeyException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -32,6 +36,7 @@ public class MTNettyAgents {
 		ClientAgent clientAgent = new ClientAgent();
 
 		Context.sslEnabled = false;
+		doStartups(serverAgent, clientAgent);
 		doAgentOperations(serverAgent, clientAgent);
 	}
 
@@ -42,47 +47,65 @@ public class MTNettyAgents {
 		ServerAgent serverAgent = new ServerAgent();
 		ClientAgent clientAgent = new ClientAgent();
 
-		{
+		doTLSConfigs(serverAgent, clientAgent);
+		clientAgent.getConfig().getTrustedPeers().add(new Peer(serverAgent.getConfig().getCert()));
+		serverAgent.getConfig().getTrustedPeers().add(new Peer(clientAgent.getConfig().getCert()));
+
+		doStartups(serverAgent, clientAgent);
+		doAgentOperations(serverAgent, clientAgent);
+	}
+
+	@Test
+	public void testWithTLSAndPeerIdentificationMode() throws Exception {
+		System.out.println("Testing with TLS and peer identification mode...");
+
+		ServerAgent serverAgent = new ServerAgent();
+		ClientAgent clientAgent = new ClientAgent();
+
+		doTLSConfigs(serverAgent, clientAgent);
+
+		serverAgent.startPeerIdentificationMode();
+		clientAgent.startPeerIdentificationMode();
+
+		doStartups(serverAgent, clientAgent);
+
+		for (Entry<SocketAddress, PeerContext> entry : serverAgent.getClients().entrySet()) {
+			SocketAddress socketAddress = entry.getKey();
+			PeerContext client = entry.getValue();
+
+			byte[] clientFingerprint = Utils.getFingerPrint(client.getCert());
+			System.out.printf("Remote socket: %s - Client fingerprint: %s\n", socketAddress, new String(clientFingerprint));
+		}
+
+		byte[] serverFingerprint = Utils.getFingerPrint(clientAgent.getServer().getCert());
+		System.out.printf("Server fingerprint: %s\n", new String(serverFingerprint));
+
+		doAgentOperations(serverAgent, clientAgent);
+	}
+
+	private void doTLSConfigs(ServerAgent serverAgent, ClientAgent clientAgent) throws CertificateException, CertificateEncodingException, InvalidKeyException {
+		{ // --- on server side
 			SelfSignedCertificate cert = new SelfSignedCertificate();
 			String serverPriKey = Utils.base64Encode(cert.key().getEncoded());
 			String serverCert = Utils.base64Encode(cert.cert().getEncoded());
 
 			serverAgent.getConfig().setPriKey(serverPriKey);
 			serverAgent.getConfig().setCert(serverCert);
-
-			clientAgent.getConfig().getTrustedPeers().add(new Peer(serverCert));
 		}
 
-		{
+		{ // --- on client side
 			SelfSignedCertificate cert = new SelfSignedCertificate();
 			String clientPriKey = Utils.base64Encode(cert.key().getEncoded());
 			String clientCert = Utils.base64Encode(cert.cert().getEncoded());
 
 			clientAgent.getConfig().setPriKey(clientPriKey);
 			clientAgent.getConfig().setCert(clientCert);
-
-			serverAgent.getConfig().getTrustedPeers().add(new Peer(clientCert));
 		}
-
-		doAgentOperations(serverAgent, clientAgent);
 	}
 
 	// ---
 
 	private void doAgentOperations(ServerAgent serverAgent, ClientAgent clientAgent) throws InterruptedException {
-		{
-			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
-			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
-		}
-
-		{
-			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
-			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
-		}
-
-		serverAgent.startup();
-		clientAgent.startup();
-
 		Map<SocketAddress, PeerContext> clients = null;
 		while (true) {
 			clients = serverAgent.getClients();
@@ -126,8 +149,22 @@ public class MTNettyAgents {
 
 		clientAgent.shutdown();
 		serverAgent.shutdown();
-		
+
 		TimeUnit.SECONDS.sleep(1);
+	}
+
+	private void doStartups(ServerAgent serverAgent, ClientAgent clientAgent) {
+		{ // --- on server side
+			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
+			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
+			serverAgent.startup();
+		}
+
+		{ // --- on client side
+			clientAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnClient(message));
+			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
+			clientAgent.startup();
+		}
 	}
 
 	// ---

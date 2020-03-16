@@ -13,6 +13,8 @@ public class Context {
 
 	public static boolean sslEnabled = Constants.DEFAULT_SSL_ENABLED;
 
+	public static boolean peerIdentificationMode = false;
+
 	private MessageSender messageSender = new MessageSender();
 
 	private MessageReceiver messageReceiver = new MessageReceiver();

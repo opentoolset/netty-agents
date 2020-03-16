@@ -48,7 +48,7 @@ public class ClientAgent extends AbstractAgent {
 
 	private Config config = new Config();
 
-	private PeerContext peerContext = new PeerContext();
+	private PeerContext server = new PeerContext();
 
 	private boolean shutdownRequested = false;
 
@@ -66,7 +66,15 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	public PeerContext getServer() {
-		return peerContext;
+		return server;
+	}
+
+	@Override
+	public void stopPeerIdentificationMode() {
+		super.stopPeerIdentificationMode();
+		if (!server.isTrusted()) {
+			server.getChannelHandlerContext().close();
+		}
 	}
 
 	@Override
@@ -130,23 +138,24 @@ public class ClientAgent extends AbstractAgent {
 							if (Context.sslEnabled) {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
-										javax.security.cert.X509Certificate[] peerCertChain = sslHandler.engine().getSession().getPeerCertificateChain();
-										javax.security.cert.X509Certificate peerCert = peerCertChain[0];
-										ClientAgent.this.peerContext.setChannelHandlerContext(ctx);
-										ClientAgent.this.peerContext.setCert(peerCert);
+										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
+										Certificate peerCert = peerCerts[0];
+										ClientAgent.this.server.setChannelHandlerContext(ctx);
+										ClientAgent.this.server.setCert(peerCert);
+										ClientAgent.this.server.setTrusted(!Context.peerIdentificationMode);
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);
 									}
 								});
 							} else {
-								ClientAgent.this.peerContext.setChannelHandlerContext(ctx);
+								ClientAgent.this.server.setChannelHandlerContext(ctx);
 							}
 						}
 
 						@Override
 						public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 							ctx.close();
-							ClientAgent.this.peerContext.setChannelHandlerContext(null);
+							ClientAgent.this.server.setChannelHandlerContext(null);
 						}
 
 						@Override
@@ -167,7 +176,7 @@ public class ClientAgent extends AbstractAgent {
 		try {
 			this.shutdownRequested = true;
 
-			ChannelHandlerContext channelHandlerContext = this.peerContext.getChannelHandlerContext();
+			ChannelHandlerContext channelHandlerContext = this.server.getChannelHandlerContext();
 			if (channelHandlerContext != null) {
 				channelHandlerContext.close();
 			}
@@ -179,15 +188,15 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request) {
-		return getContext().getMessageSender().doRequest(request, this.peerContext);
+		return getContext().getMessageSender().doRequest(request, this.server);
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, int timeoutSec) {
-		return getContext().getMessageSender().doRequest(request, this.peerContext, timeoutSec);
+		return getContext().getMessageSender().doRequest(request, this.server, timeoutSec);
 	}
 
 	public void sendMessage(AbstractMessage message) {
-		getContext().getMessageSender().sendMessage(message, this.peerContext);
+		getContext().getMessageSender().sendMessage(message, this.server);
 	}
 
 	// ---

@@ -8,8 +8,11 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -68,6 +71,20 @@ public class ServerAgent extends AbstractAgent {
 	}
 
 	@Override
+	public void stopPeerIdentificationMode() {
+		super.stopPeerIdentificationMode();
+
+		for (Entry<SocketAddress, PeerContext> entry : new ArrayList<>(clients.entrySet())) {
+			SocketAddress key = entry.getKey();
+			PeerContext client = entry.getValue();
+			if (!client.isTrusted()) {
+				client.getChannelHandlerContext().close();
+				clients.remove(key);
+			}
+		}
+	}
+
+	@Override
 	public void startup() {
 		super.startup();
 
@@ -115,8 +132,8 @@ public class ServerAgent extends AbstractAgent {
 							if (Context.sslEnabled) {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
-										javax.security.cert.X509Certificate[] peerCertChain = sslHandler.engine().getSession().getPeerCertificateChain();
-										javax.security.cert.X509Certificate peerCert = peerCertChain[0];
+										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
+										Certificate peerCert = peerCerts[0];
 										ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, peerCert));
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);
@@ -181,7 +198,7 @@ public class ServerAgent extends AbstractAgent {
 		}
 	}
 
-	private PeerContext addOrUpdateClientContext(SocketAddress key, PeerContext peerContext, ChannelHandlerContext channelHandlerContext, javax.security.cert.X509Certificate peerCert) {
+	private PeerContext addOrUpdateClientContext(SocketAddress key, PeerContext peerContext, ChannelHandlerContext channelHandlerContext, Certificate peerCert) {
 		peerContext = peerContext != null ? peerContext : new PeerContext();
 		peerContext.setChannelHandlerContext(channelHandlerContext);
 		peerContext.setCert(peerCert);
