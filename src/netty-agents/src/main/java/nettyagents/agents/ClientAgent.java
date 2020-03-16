@@ -73,8 +73,9 @@ public class ClientAgent extends AbstractAgent {
 	@Override
 	public void stopPeerIdentificationMode() {
 		super.stopPeerIdentificationMode();
-		if (!server.isTrusted()) {
-			server.getChannelHandlerContext().close();
+		if (!this.server.isTrusted()) {
+			this.server.setChannelHandlerContext(null);
+			this.server.getChannelHandlerContext().close();
 		}
 	}
 
@@ -84,28 +85,26 @@ public class ClientAgent extends AbstractAgent {
 
 		if (Context.sslEnabled) {
 			try {
+				KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 				{
-					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+					KeyStore keystore = KeyStore.getInstance("JKS");
 					{
-						KeyStore keystore = KeyStore.getInstance("JKS");
-						{
-							PrivateKey key = getConfig().getPriKey();
-							Certificate cert = getConfig().getCert();
+						PrivateKey key = getConfig().getPriKey();
+						Certificate cert = getConfig().getCert();
 
-							keystore.load(null);
-							keystore.setCertificateEntry("my-cert", cert);
-							keystore.setKeyEntry("my-key", key, DEFAULT_IN_MEMORY_KEYSTORE_PW.toCharArray(), new Certificate[] { cert });
-						}
-
-						keyManagerFactory.init(keystore, DEFAULT_IN_MEMORY_KEYSTORE_PW.toCharArray());
+						keystore.load(null);
+						keystore.setCertificateEntry("my-cert", cert);
+						keystore.setKeyEntry("my-key", key, DEFAULT_IN_MEMORY_KEYSTORE_PW.toCharArray(), new Certificate[] { cert });
 					}
 
-					SslContextBuilder builder = SslContextBuilder.forClient();
-					builder.keyManager(keyManagerFactory);
-					builder.trustManager(new TrustManager(getConfig().getTrustedPeers().values()));
-					SslContext sslContext = builder.build();
-					setSslContext(sslContext);
+					keyManagerFactory.init(keystore, DEFAULT_IN_MEMORY_KEYSTORE_PW.toCharArray());
 				}
+
+				SslContextBuilder builder = SslContextBuilder.forClient();
+				builder.keyManager(keyManagerFactory);
+				builder.trustManager(new TrustManager(() -> getContext().getTrustedPeers().values()));
+				SslContext sslContext = builder.build();
+				setSslContext(sslContext);
 			} catch (IOException | GeneralSecurityException e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
@@ -131,7 +130,19 @@ public class ClientAgent extends AbstractAgent {
 						pipeline.addLast(sslHandler);
 					}
 
-					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
+					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(new InboundMessageHandler.DataProvider() {
+
+						@Override
+						public Context getContext() {
+							return getContext();
+						}
+
+						@Override
+						public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
+							return Utils.ctxBelongsToTrustedPeer(ctx, ClientAgent.this.server);
+						}
+					}));
+
 					pipeline.addLast(new ChannelHandler() {
 
 						@Override
@@ -140,14 +151,18 @@ public class ClientAgent extends AbstractAgent {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
-										if (!Context.peerIdentificationMode) {
-											Utils.verifyCertChain(peerCerts, getConfig().getTrustedPeers().values());
+										if (!Context.isPeerIdentificationMode()) {
+											Utils.verifyCertChain(peerCerts, getContext().getTrustedPeers().values());
 										}
 
 										Certificate peerCert = peerCerts[0];
-										ClientAgent.this.server.setCert((X509Certificate) peerCert);
-										ClientAgent.this.server.setChannelHandlerContext(ctx);
-										ClientAgent.this.server.setTrusted(!Context.peerIdentificationMode);
+										PeerContext server = ClientAgent.this.server;
+										server.setCert((X509Certificate) peerCert);
+										server.setChannelHandlerContext(ctx);
+
+										if (!Context.isPeerIdentificationMode()) {
+											server.setTrusted(true);
+										}
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);
 									}

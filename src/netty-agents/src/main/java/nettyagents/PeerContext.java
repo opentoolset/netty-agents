@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 
 public class PeerContext {
 
+	private String id;
 	private ChannelHandlerContext channelHandlerContext;
 	private X509Certificate cert;
 	private boolean trusted = false;
@@ -20,6 +21,10 @@ public class PeerContext {
 	}
 
 	// ---
+
+	public String getId() {
+		return id;
+	}
 
 	public ChannelHandlerContext getChannelHandlerContext() {
 		return channelHandlerContext;
@@ -34,6 +39,10 @@ public class PeerContext {
 	}
 
 	// ---
+
+	public void setId(String id) {
+		this.id = id;
+	}
 
 	public void setChannelHandlerContext(ChannelHandlerContext channelHandlerContext) {
 		this.channelHandlerContext = channelHandlerContext;

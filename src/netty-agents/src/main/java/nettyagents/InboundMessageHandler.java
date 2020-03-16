@@ -14,12 +14,19 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	private static Logger logger = Context.getLogger();
 
-	private Context context;
+	private DataProvider dataProvider;
+
+	public interface DataProvider {
+
+		Context getContext();
+
+		boolean verifyChannelHandlerContext(ChannelHandlerContext ctx);
+	}
 
 	// ---
 
-	public InboundMessageHandler(Context context) {
-		this.context = context;
+	public InboundMessageHandler(DataProvider dataProvider) {
+		this.dataProvider = dataProvider;
 	}
 
 	@Override
@@ -29,7 +36,7 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (Context.peerIdentificationMode) {
+		if (Context.isPeerIdentificationMode() || !this.dataProvider.verifyChannelHandlerContext(ctx)) {
 			return;
 		}
 
@@ -38,7 +45,7 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 			String correlationId = messageWrapper.getCorrelationId();
 			if (correlationId != null) {
-				OperationContext operationContext = this.context.getMessageSender().getWaitingRequests().get(correlationId);
+				OperationContext operationContext = this.dataProvider.getContext().getMessageSender().getWaitingRequests().get(correlationId);
 				if (operationContext != null) {
 					operationContext.setResponseWrapper(messageWrapper);
 					Thread thread = operationContext.getThread();
@@ -53,11 +60,11 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 			} else {
 				String id = messageWrapper.getId();
 				if (id != null) {
-					AbstractMessage response = this.context.getMessageReceiver().handleRequest(messageWrapper);
+					AbstractMessage response = this.dataProvider.getContext().getMessageReceiver().handleRequest(messageWrapper);
 					MessageWrapper responseWrapper = MessageWrapper.createResponse(response, id);
 					ctx.writeAndFlush(responseWrapper);
 				} else {
-					this.context.getMessageReceiver().handleMessage(messageWrapper);
+					this.dataProvider.getContext().getMessageReceiver().handleMessage(messageWrapper);
 				}
 			}
 		} else {

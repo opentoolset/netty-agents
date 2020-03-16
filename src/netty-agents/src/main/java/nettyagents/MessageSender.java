@@ -18,11 +18,15 @@ public class MessageSender {
 	// ---
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext) {
+		if (Context.isPeerIdentificationMode()) {
+			return null;
+		}
+
 		return doRequest(request, peerContext, Constants.DEFAULT_REQUEST_TIMEOUT_SEC);
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext, int timeoutSec) {
-		if (Context.peerIdentificationMode) {
+		if (Context.isPeerIdentificationMode()) {
 			return null;
 		}
 
@@ -60,7 +64,7 @@ public class MessageSender {
 	}
 
 	public <T extends AbstractMessage> boolean sendMessage(T message, PeerContext peerContext) {
-		if (Context.peerIdentificationMode) {
+		if (Context.isPeerIdentificationMode()) {
 			return false;
 		}
 

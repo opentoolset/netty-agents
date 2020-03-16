@@ -20,7 +20,6 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import mhadidilek.netty.agents.TestData.SampleMessage;
 import mhadidilek.netty.agents.TestData.SampleRequest;
 import mhadidilek.netty.agents.TestData.SampleResponse;
-import nettyagents.AbstractAgent.AbstractConfig.Peer;
 import nettyagents.Context;
 import nettyagents.PeerContext;
 import nettyagents.Utils;
@@ -50,13 +49,21 @@ public class MTNettyAgents {
 
 		doTLSConfigs(serverAgent, clientAgent);
 
-		X509Certificate serverCert = serverAgent.getConfig().getCert();
-		String serverFingerprint = Utils.getFingerprintAsHex(serverCert);
-		clientAgent.getConfig().getTrustedPeers().put(serverFingerprint, new Peer(serverCert));
+		{
+			X509Certificate serverCert = serverAgent.getConfig().getCert();
+			String serverFingerprint = Utils.getFingerprintAsHex(serverCert);
+			PeerContext peer = new PeerContext();
+			peer.setCert(serverCert);
+			clientAgent.getContext().getTrustedPeers().put(serverFingerprint, peer);
+		}
 
-		X509Certificate clientCert = clientAgent.getConfig().getCert();
-		String clientFingerprint = Utils.getFingerprintAsHex(clientCert);
-		serverAgent.getConfig().getTrustedPeers().put(clientFingerprint, new Peer(clientCert));
+		{
+			X509Certificate clientCert = clientAgent.getConfig().getCert();
+			String clientFingerprint = Utils.getFingerprintAsHex(clientCert);
+			PeerContext peer = new PeerContext();
+			peer.setCert(clientCert);
+			serverAgent.getContext().getTrustedPeers().put(clientFingerprint, peer);
+		}
 
 		doStartups(serverAgent, clientAgent);
 		doAgentOperations(serverAgent, clientAgent);
@@ -86,7 +93,9 @@ public class MTNettyAgents {
 
 			{
 				client.setTrusted(true);
-				serverAgent.getConfig().getTrustedPeers().put(clientFingerprint, new Peer(clientCert));
+				PeerContext peer = new PeerContext();
+				peer.setCert(clientCert);
+				serverAgent.getContext().getTrustedPeers().put(clientFingerprint, peer);
 			}
 		}
 
@@ -96,7 +105,9 @@ public class MTNettyAgents {
 
 		{
 			clientAgent.getServer().setTrusted(true);
-			clientAgent.getConfig().getTrustedPeers().put(serverFingerprint, new Peer(serverCert));
+			PeerContext peer = new PeerContext();
+			peer.setCert(serverCert);
+			clientAgent.getContext().getTrustedPeers().put(serverFingerprint, peer);
 		}
 
 		serverAgent.stopPeerIdentificationMode();

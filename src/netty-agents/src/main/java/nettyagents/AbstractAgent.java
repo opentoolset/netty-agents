@@ -12,9 +12,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -23,7 +20,6 @@ import javax.net.ssl.X509TrustManager;
 import org.slf4j.Logger;
 
 import io.netty.handler.ssl.SslContext;
-import nettyagents.AbstractAgent.AbstractConfig.Peer;
 
 public abstract class AbstractAgent {
 
@@ -48,20 +44,20 @@ public abstract class AbstractAgent {
 	}
 
 	public void startPeerIdentificationMode() {
-		Context.peerIdentificationMode = true;
+		Context.setPeerIdentificationMode(true);
 	}
 
 	public void stopPeerIdentificationMode() {
-		Context.peerIdentificationMode = false;
+		Context.setPeerIdentificationMode(false);
 	}
 
 	// ---
 
-	protected void startup() {
+	public Context getContext() {
+		return context;
 	}
 
-	protected Context getContext() {
-		return context;
+	protected void startup() {
 	}
 
 	protected SslContext getSslContext() {
@@ -79,8 +75,6 @@ public abstract class AbstractAgent {
 		private PrivateKey priKey;
 		private X509Certificate cert;
 
-		private Map<String, Peer> trustedPpeers = new HashMap<>();
-
 		// ---
 
 		public PrivateKey getPriKey() {
@@ -89,10 +83,6 @@ public abstract class AbstractAgent {
 
 		public X509Certificate getCert() {
 			return cert;
-		}
-
-		public Map<String, Peer> getTrustedPeers() {
-			return trustedPpeers;
 		}
 
 		// ---
@@ -124,54 +114,34 @@ public abstract class AbstractAgent {
 			this.cert = cert;
 			return this;
 		}
-
-		public static class Peer {
-
-			private String id;
-			private String ipAddress;
-			private X509Certificate cert;
-
-			public Peer(X509Certificate cert) {
-				this.id = id;
-				this.ipAddress = ipAddress;
-				this.cert = cert;
-			}
-
-			public String getId() {
-				return id;
-			}
-
-			public String getIpAddress() {
-				return ipAddress;
-			}
-
-			public X509Certificate getCert() {
-				return cert;
-			}
-		}
 	}
 
 	// ---
 
 	public static class TrustManager implements X509TrustManager {
 
-		private Collection<Peer> trustedPeers = new HashSet<>();
+		public interface DataProvider {
 
-		public TrustManager(Collection<Peer> trustedPeers) throws GeneralSecurityException, IOException {
-			this.trustedPeers = trustedPeers;
+			Collection<PeerContext> getTrustedPeers();
+		}
+
+		private DataProvider dataProvider;
+
+		public TrustManager(DataProvider dataProvider) throws GeneralSecurityException, IOException {
+			this.dataProvider = dataProvider;
 		}
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			if (!Context.peerIdentificationMode) {
-				Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+			if (!Context.isPeerIdentificationMode()) {
+				Utils.verifyCertChain(peerCertChain, this.dataProvider.getTrustedPeers());
 			}
 		}
 
 		@Override
 		public void checkServerTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			if (!Context.peerIdentificationMode) {
-				Utils.verifyCertChain(peerCertChain, this.trustedPeers);
+			if (!Context.isPeerIdentificationMode()) {
+				Utils.verifyCertChain(peerCertChain, this.dataProvider.getTrustedPeers());
 			}
 		}
 

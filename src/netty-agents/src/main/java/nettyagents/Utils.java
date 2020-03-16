@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.codec.binary.Hex;
 
-import nettyagents.AbstractAgent.AbstractConfig.Peer;
+import io.netty.channel.ChannelHandlerContext;
 
 public class Utils {
 
@@ -49,7 +49,7 @@ public class Utils {
 		return tester.get();
 	}
 
-	public static void verifyCertChain(Certificate[] peerCertChain, Collection<Peer> trustedPeers) throws CertificateException {
+	public static void verifyCertChain(Certificate[] peerCertChain, Collection<PeerContext> trustedPeers) throws CertificateException {
 		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 		Certificate certPEM = peerCertChain[0];
 		CertPath certPath = certFactory.generateCertPath(Arrays.asList(certPEM));
@@ -57,7 +57,7 @@ public class Utils {
 		try {
 			CertPathValidator certPathValidator = CertPathValidator.getInstance("PKIX");
 
-			for (Peer trustedPeer : trustedPeers) {
+			for (PeerContext trustedPeer : trustedPeers) {
 				try {
 					Set<TrustAnchor> trustAnchors = new HashSet<>();
 					TrustAnchor trustAnchor = new TrustAnchor(trustedPeer.getCert(), null);
@@ -127,6 +127,10 @@ public class Utils {
 
 	public static byte[] base64Decode(String str) {
 		return Base64.getDecoder().decode(str);
+	}
+
+	public static boolean ctxBelongsToTrustedPeer(ChannelHandlerContext ctx, PeerContext peer) {
+		return ctx != null && ctx.equals(peer.getChannelHandlerContext()) && peer.isTrusted();
 	}
 
 	// ---

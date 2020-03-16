@@ -4,6 +4,9 @@
 // ---
 package nettyagents;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,16 +16,26 @@ public class Context {
 
 	public static boolean sslEnabled = Constants.DEFAULT_SSL_ENABLED;
 
-	public static boolean peerIdentificationMode = false;
+	private static boolean peerIdentificationMode = false;
 
 	private MessageSender messageSender = new MessageSender();
 
 	private MessageReceiver messageReceiver = new MessageReceiver();
 
+	private Map<String, PeerContext> trustedPeers = new HashMap<>();
+
 	// ---
 
 	public static Logger getLogger() {
 		return logger;
+	}
+
+	public static boolean isPeerIdentificationMode() {
+		return peerIdentificationMode;
+	}
+
+	public static void setPeerIdentificationMode(boolean peerIdentificationMode) {
+		Context.peerIdentificationMode = peerIdentificationMode;
 	}
 
 	// ---
@@ -33,5 +46,9 @@ public class Context {
 
 	public MessageReceiver getMessageReceiver() {
 		return messageReceiver;
+	}
+
+	public Map<String, PeerContext> getTrustedPeers() {
+		return trustedPeers;
 	}
 }

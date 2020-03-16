@@ -79,8 +79,9 @@ public class ServerAgent extends AbstractAgent {
 			SocketAddress key = entry.getKey();
 			PeerContext client = entry.getValue();
 			if (!client.isTrusted()) {
-				clients.remove(key);
+				client.setChannelHandlerContext(null);
 				client.getChannelHandlerContext().close();
+				clients.remove(key);
 			}
 		}
 	}
@@ -95,7 +96,8 @@ public class ServerAgent extends AbstractAgent {
 				X509Certificate cert = getConfig().getCert();
 
 				SslContextBuilder builder = SslContextBuilder.forServer(key, cert);
-				builder.trustManager(new TrustManager(getConfig().getTrustedPeers().values()));
+				builder.trustManager(new TrustManager(() -> getContext().getTrustedPeers().values()));
+
 				builder.clientAuth(ClientAuth.REQUIRE);
 				SslContext sslContext = builder.build();
 				setSslContext(sslContext);
@@ -123,7 +125,19 @@ public class ServerAgent extends AbstractAgent {
 						pipeline.addLast(sslHandler);
 					}
 
-					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(getContext()));
+					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(new InboundMessageHandler.DataProvider() {
+
+						@Override
+						public Context getContext() {
+							return getContext();
+						}
+
+						@Override
+						public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
+							return ctx != null && ServerAgent.this.clients.values().stream().anyMatch(client -> Utils.ctxBelongsToTrustedPeer(ctx, client));
+						}
+					}));
+
 					pipeline.addLast(new ChannelHandler() {
 
 						@Override
@@ -134,13 +148,16 @@ public class ServerAgent extends AbstractAgent {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
-										if (!Context.peerIdentificationMode) {
-											Utils.verifyCertChain(peerCerts, getConfig().getTrustedPeers().values());
+										if (!Context.isPeerIdentificationMode()) {
+											Utils.verifyCertChain(peerCerts, getContext().getTrustedPeers().values());
 										}
 
 										Certificate peerCert = peerCerts[0];
 										PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, peerCert));
-										client.setTrusted(!Context.peerIdentificationMode);
+										
+										if (!Context.isPeerIdentificationMode()) {
+											client.setTrusted(true);
+										}
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);
 									}
