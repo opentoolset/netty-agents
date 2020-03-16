@@ -73,12 +73,17 @@ public class MTNettyAgents {
 			SocketAddress socketAddress = entry.getKey();
 			PeerContext client = entry.getValue();
 
-			byte[] clientFingerprint = Utils.getFingerPrint(client.getCert());
-			System.out.printf("Remote socket: %s - Client fingerprint: %s\n", socketAddress, new String(clientFingerprint));
+			String clientFingerprint = Utils.getFingerPrintAsHex(client.getCert());
+			System.out.printf("Remote socket: %s - Client fingerprint: %s\n", socketAddress, clientFingerprint);
+			client.setTrusted(true);
 		}
 
-		byte[] serverFingerprint = Utils.getFingerPrint(clientAgent.getServer().getCert());
-		System.out.printf("Server fingerprint: %s\n", new String(serverFingerprint));
+		String serverFingerprint = Utils.getFingerPrintAsHex(clientAgent.getServer().getCert());
+		System.out.printf("Server fingerprint: %s\n", serverFingerprint);
+		clientAgent.getServer().setTrusted(true);
+
+		serverAgent.stopPeerIdentificationMode();
+		clientAgent.stopPeerIdentificationMode();
 
 		doAgentOperations(serverAgent, clientAgent);
 	}

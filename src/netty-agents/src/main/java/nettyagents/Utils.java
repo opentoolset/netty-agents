@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.apache.commons.codec.binary.Hex;
+
 import nettyagents.AbstractAgent.AbstractConfig.Peer;
 
 public class Utils {
@@ -100,6 +102,12 @@ public class Utils {
 		@SuppressWarnings("restriction")
 		X509Certificate peerCert = new sun.security.x509.X509CertImpl(peerCertBytes);
 		return peerCert;
+	}
+
+	public static String getFingerPrintAsHex(Certificate cert) {
+		byte[] fingerPrintBytes = getFingerPrint(cert);
+		String hex = Hex.encodeHexString(fingerPrintBytes);
+		return hex;
 	}
 
 	public static byte[] getFingerPrint(Certificate cert) {
