@@ -38,6 +38,7 @@ import nettyagents.InboundMessageHandler;
 import nettyagents.MessageDecoder;
 import nettyagents.MessageEncoder;
 import nettyagents.PeerContext;
+import nettyagents.Utils;
 
 public class ClientAgent extends AbstractAgent {
 
@@ -89,7 +90,7 @@ public class ClientAgent extends AbstractAgent {
 						KeyStore keystore = KeyStore.getInstance("JKS");
 						{
 							PrivateKey key = getConfig().getPriKey();
-							X509Certificate cert = getConfig().getCert();
+							Certificate cert = getConfig().getCert();
 
 							keystore.load(null);
 							keystore.setCertificateEntry("my-cert", cert);
@@ -101,7 +102,7 @@ public class ClientAgent extends AbstractAgent {
 
 					SslContextBuilder builder = SslContextBuilder.forClient();
 					builder.keyManager(keyManagerFactory);
-					builder.trustManager(new TrustManager(getConfig().getTrustedPeers()));
+					builder.trustManager(new TrustManager(getConfig().getTrustedPeers().values()));
 					SslContext sslContext = builder.build();
 					setSslContext(sslContext);
 				}
@@ -139,9 +140,13 @@ public class ClientAgent extends AbstractAgent {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
+										if (!Context.peerIdentificationMode) {
+											Utils.verifyCertChain(peerCerts, getConfig().getTrustedPeers().values());
+										}
+
 										Certificate peerCert = peerCerts[0];
+										ClientAgent.this.server.setCert((X509Certificate) peerCert);
 										ClientAgent.this.server.setChannelHandlerContext(ctx);
-										ClientAgent.this.server.setCert(peerCert);
 										ClientAgent.this.server.setTrusted(!Context.peerIdentificationMode);
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);

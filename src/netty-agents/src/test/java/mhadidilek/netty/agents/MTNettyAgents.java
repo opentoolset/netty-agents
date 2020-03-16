@@ -8,6 +8,7 @@ import java.net.SocketAddress;
 import java.security.InvalidKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -48,8 +49,14 @@ public class MTNettyAgents {
 		ClientAgent clientAgent = new ClientAgent();
 
 		doTLSConfigs(serverAgent, clientAgent);
-		clientAgent.getConfig().getTrustedPeers().add(new Peer(serverAgent.getConfig().getCert()));
-		serverAgent.getConfig().getTrustedPeers().add(new Peer(clientAgent.getConfig().getCert()));
+
+		X509Certificate serverCert = serverAgent.getConfig().getCert();
+		String serverFingerprint = Utils.getFingerprintAsHex(serverCert);
+		clientAgent.getConfig().getTrustedPeers().put(serverFingerprint, new Peer(serverCert));
+
+		X509Certificate clientCert = clientAgent.getConfig().getCert();
+		String clientFingerprint = Utils.getFingerprintAsHex(clientCert);
+		serverAgent.getConfig().getTrustedPeers().put(clientFingerprint, new Peer(clientCert));
 
 		doStartups(serverAgent, clientAgent);
 		doAgentOperations(serverAgent, clientAgent);
@@ -73,14 +80,24 @@ public class MTNettyAgents {
 			SocketAddress socketAddress = entry.getKey();
 			PeerContext client = entry.getValue();
 
-			String clientFingerprint = Utils.getFingerPrintAsHex(client.getCert());
+			X509Certificate clientCert = client.getCert();
+			String clientFingerprint = Utils.getFingerprintAsHex(clientCert);
 			System.out.printf("Remote socket: %s - Client fingerprint: %s\n", socketAddress, clientFingerprint);
-			client.setTrusted(true);
+
+			{
+				client.setTrusted(true);
+				serverAgent.getConfig().getTrustedPeers().put(clientFingerprint, new Peer(clientCert));
+			}
 		}
 
-		String serverFingerprint = Utils.getFingerPrintAsHex(clientAgent.getServer().getCert());
+		X509Certificate serverCert = clientAgent.getServer().getCert();
+		String serverFingerprint = Utils.getFingerprintAsHex(serverCert);
 		System.out.printf("Server fingerprint: %s\n", serverFingerprint);
-		clientAgent.getServer().setTrusted(true);
+
+		{
+			clientAgent.getServer().setTrusted(true);
+			clientAgent.getConfig().getTrustedPeers().put(serverFingerprint, new Peer(serverCert));
+		}
 
 		serverAgent.stopPeerIdentificationMode();
 		clientAgent.stopPeerIdentificationMode();
@@ -158,7 +175,7 @@ public class MTNettyAgents {
 		TimeUnit.SECONDS.sleep(1);
 	}
 
-	private void doStartups(ServerAgent serverAgent, ClientAgent clientAgent) {
+	private void doStartups(ServerAgent serverAgent, ClientAgent clientAgent) throws InterruptedException {
 		{ // --- on server side
 			serverAgent.setMessageHandler(SampleMessage.class, message -> handleMessageOnServer(message));
 			serverAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnServer(request));
@@ -170,6 +187,8 @@ public class MTNettyAgents {
 			clientAgent.setRequestHandler(SampleRequest.class, request -> handleRequestOnClient(request));
 			clientAgent.startup();
 		}
+
+		TimeUnit.SECONDS.sleep(1);
 	}
 
 	// ---

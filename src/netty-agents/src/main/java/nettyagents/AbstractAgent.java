@@ -11,8 +11,10 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -77,7 +79,7 @@ public abstract class AbstractAgent {
 		private PrivateKey priKey;
 		private X509Certificate cert;
 
-		private List<Peer> trustedPpeers = new ArrayList<>();
+		private Map<String, Peer> trustedPpeers = new HashMap<>();
 
 		// ---
 
@@ -89,7 +91,7 @@ public abstract class AbstractAgent {
 			return cert;
 		}
 
-		public List<Peer> getTrustedPeers() {
+		public Map<String, Peer> getTrustedPeers() {
 			return trustedPpeers;
 		}
 
@@ -153,9 +155,9 @@ public abstract class AbstractAgent {
 
 	public static class TrustManager implements X509TrustManager {
 
-		private List<Peer> trustedPeers = new ArrayList<>();
+		private Collection<Peer> trustedPeers = new HashSet<>();
 
-		public TrustManager(List<Peer> trustedPeers) throws GeneralSecurityException, IOException {
+		public TrustManager(Collection<Peer> trustedPeers) throws GeneralSecurityException, IOException {
 			this.trustedPeers = trustedPeers;
 		}
 

@@ -38,7 +38,7 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 			String correlationId = messageWrapper.getCorrelationId();
 			if (correlationId != null) {
-				OperationContext operationContext = context.getMessageSender().getWaitingRequests().get(correlationId);
+				OperationContext operationContext = this.context.getMessageSender().getWaitingRequests().get(correlationId);
 				if (operationContext != null) {
 					operationContext.setResponseWrapper(messageWrapper);
 					Thread thread = operationContext.getThread();
@@ -53,11 +53,11 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 			} else {
 				String id = messageWrapper.getId();
 				if (id != null) {
-					AbstractMessage response = context.getMessageReceiver().handleRequest(messageWrapper);
+					AbstractMessage response = this.context.getMessageReceiver().handleRequest(messageWrapper);
 					MessageWrapper responseWrapper = MessageWrapper.createResponse(response, id);
 					ctx.writeAndFlush(responseWrapper);
 				} else {
-					context.getMessageReceiver().handleMessage(messageWrapper);
+					this.context.getMessageReceiver().handleMessage(messageWrapper);
 				}
 			}
 		} else {

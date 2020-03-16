@@ -4,14 +4,14 @@
 // ---
 package nettyagents;
 
-import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 
 import io.netty.channel.ChannelHandlerContext;
 
 public class PeerContext {
 
 	private ChannelHandlerContext channelHandlerContext;
-	private Certificate cert;
+	private X509Certificate cert;
 	private boolean trusted = false;
 
 	// ---
@@ -25,7 +25,7 @@ public class PeerContext {
 		return channelHandlerContext;
 	}
 
-	public Certificate getCert() {
+	public X509Certificate getCert() {
 		return cert;
 	}
 
@@ -39,7 +39,7 @@ public class PeerContext {
 		this.channelHandlerContext = channelHandlerContext;
 	}
 
-	public void setCert(Certificate cert) {
+	public void setCert(X509Certificate cert) {
 		this.cert = cert;
 	}
 

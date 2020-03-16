@@ -22,8 +22,8 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -49,9 +49,9 @@ public class Utils {
 		return tester.get();
 	}
 
-	public static void verifyCertChain(X509Certificate[] peerCertChain, List<Peer> trustedPeers) throws CertificateException {
+	public static void verifyCertChain(Certificate[] peerCertChain, Collection<Peer> trustedPeers) throws CertificateException {
 		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-		X509Certificate certPEM = peerCertChain[0];
+		Certificate certPEM = peerCertChain[0];
 		CertPath certPath = certFactory.generateCertPath(Arrays.asList(certPEM));
 
 		try {
@@ -104,13 +104,13 @@ public class Utils {
 		return peerCert;
 	}
 
-	public static String getFingerPrintAsHex(Certificate cert) {
-		byte[] fingerPrintBytes = getFingerPrint(cert);
+	public static String getFingerprintAsHex(Certificate cert) {
+		byte[] fingerPrintBytes = getFingerprint(cert);
 		String hex = Hex.encodeHexString(fingerPrintBytes);
 		return hex;
 	}
 
-	public static byte[] getFingerPrint(Certificate cert) {
+	public static byte[] getFingerprint(Certificate cert) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			md.reset();
