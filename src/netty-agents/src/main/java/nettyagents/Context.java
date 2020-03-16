@@ -16,9 +16,9 @@ public class Context {
 
 	public static boolean sslEnabled = Constants.DEFAULT_SSL_ENABLED;
 
-	private static boolean peerIdentificationMode = false;
+	private boolean peerIdentificationMode = false;
 
-	private MessageSender messageSender = new MessageSender();
+	private MessageSender messageSender = new MessageSender(this);
 
 	private MessageReceiver messageReceiver = new MessageReceiver();
 
@@ -30,15 +30,15 @@ public class Context {
 		return logger;
 	}
 
-	public static boolean isPeerIdentificationMode() {
+	// ---
+
+	public boolean isPeerIdentificationMode() {
 		return peerIdentificationMode;
 	}
 
-	public static void setPeerIdentificationMode(boolean peerIdentificationMode) {
-		Context.peerIdentificationMode = peerIdentificationMode;
+	public void setPeerIdentificationMode(boolean peerIdentificationMode) {
+		this.peerIdentificationMode = peerIdentificationMode;
 	}
-
-	// ---
 
 	public MessageSender getMessageSender() {
 		return messageSender;

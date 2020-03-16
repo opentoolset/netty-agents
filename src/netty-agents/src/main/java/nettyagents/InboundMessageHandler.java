@@ -36,7 +36,7 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (Context.isPeerIdentificationMode() || !this.dataProvider.verifyChannelHandlerContext(ctx)) {
+		if (Context.sslEnabled && !this.dataProvider.verifyChannelHandlerContext(ctx)) {
 			return;
 		}
 

@@ -15,10 +15,16 @@ public class MessageSender {
 
 	private Map<String, OperationContext> waitingRequests = new ConcurrentHashMap<>();
 
+	private Context context;
+
 	// ---
 
+	public MessageSender(Context context) {
+		this.context = context;
+	}
+
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext) {
-		if (Context.isPeerIdentificationMode()) {
+		if (this.context.isPeerIdentificationMode()) {
 			return null;
 		}
 
@@ -26,7 +32,7 @@ public class MessageSender {
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext, int timeoutSec) {
-		if (Context.isPeerIdentificationMode()) {
+		if (this.context.isPeerIdentificationMode()) {
 			return null;
 		}
 
@@ -64,7 +70,7 @@ public class MessageSender {
 	}
 
 	public <T extends AbstractMessage> boolean sendMessage(T message, PeerContext peerContext) {
-		if (Context.isPeerIdentificationMode()) {
+		if (this.context.isPeerIdentificationMode()) {
 			return false;
 		}
 

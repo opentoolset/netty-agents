@@ -102,7 +102,7 @@ public class ClientAgent extends AbstractAgent {
 
 				SslContextBuilder builder = SslContextBuilder.forClient();
 				builder.keyManager(keyManagerFactory);
-				builder.trustManager(new TrustManager(() -> getContext().getTrustedPeers().values()));
+				builder.trustManager(new TrustManager(() -> getContext()));
 				SslContext sslContext = builder.build();
 				setSslContext(sslContext);
 			} catch (IOException | GeneralSecurityException e) {
@@ -134,12 +134,12 @@ public class ClientAgent extends AbstractAgent {
 
 						@Override
 						public Context getContext() {
-							return getContext();
+							return ClientAgent.this.getContext();
 						}
 
 						@Override
 						public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
-							return Utils.ctxBelongsToTrustedPeer(ctx, ClientAgent.this.server);
+							return getContext().isPeerIdentificationMode() || Utils.verifyChannelHandlerContext(ctx, ClientAgent.this.server);
 						}
 					}));
 
@@ -151,7 +151,7 @@ public class ClientAgent extends AbstractAgent {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
-										if (!Context.isPeerIdentificationMode()) {
+										if (!getContext().isPeerIdentificationMode()) {
 											Utils.verifyCertChain(peerCerts, getContext().getTrustedPeers().values());
 										}
 
@@ -160,7 +160,7 @@ public class ClientAgent extends AbstractAgent {
 										server.setCert((X509Certificate) peerCert);
 										server.setChannelHandlerContext(ctx);
 
-										if (!Context.isPeerIdentificationMode()) {
+										if (!getContext().isPeerIdentificationMode()) {
 											server.setTrusted(true);
 										}
 									} catch (Exception e) {

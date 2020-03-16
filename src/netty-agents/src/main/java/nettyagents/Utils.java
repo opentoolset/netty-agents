@@ -129,6 +129,10 @@ public class Utils {
 		return Base64.getDecoder().decode(str);
 	}
 
+	public static boolean verifyChannelHandlerContext(ChannelHandlerContext ctx, PeerContext peer) {
+		return ctxBelongsToTrustedPeer(ctx, peer);
+	}
+
 	public static boolean ctxBelongsToTrustedPeer(ChannelHandlerContext ctx, PeerContext peer) {
 		return ctx != null && ctx.equals(peer.getChannelHandlerContext()) && peer.isTrusted();
 	}

@@ -11,9 +11,9 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
-import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.net.ssl.X509TrustManager;
 
@@ -44,11 +44,11 @@ public abstract class AbstractAgent {
 	}
 
 	public void startPeerIdentificationMode() {
-		Context.setPeerIdentificationMode(true);
+		this.context.setPeerIdentificationMode(true);
 	}
 
 	public void stopPeerIdentificationMode() {
-		Context.setPeerIdentificationMode(false);
+		this.context.setPeerIdentificationMode(false);
 	}
 
 	// ---
@@ -120,28 +120,23 @@ public abstract class AbstractAgent {
 
 	public static class TrustManager implements X509TrustManager {
 
-		public interface DataProvider {
+		private Supplier<Context> supplier;
 
-			Collection<PeerContext> getTrustedPeers();
-		}
-
-		private DataProvider dataProvider;
-
-		public TrustManager(DataProvider dataProvider) throws GeneralSecurityException, IOException {
-			this.dataProvider = dataProvider;
+		public TrustManager(Supplier<Context> supplier) throws GeneralSecurityException, IOException {
+			this.supplier = supplier;
 		}
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			if (!Context.isPeerIdentificationMode()) {
-				Utils.verifyCertChain(peerCertChain, this.dataProvider.getTrustedPeers());
+			if (!supplier.get().isPeerIdentificationMode()) {
+				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedPeers().values());
 			}
 		}
 
 		@Override
 		public void checkServerTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			if (!Context.isPeerIdentificationMode()) {
-				Utils.verifyCertChain(peerCertChain, this.dataProvider.getTrustedPeers());
+			if (!supplier.get().isPeerIdentificationMode()) {
+				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedPeers().values());
 			}
 		}
 
