@@ -137,11 +137,13 @@ public class Utils {
 	}
 
 	public static boolean ctxBelongsToATrustedPeer(ChannelHandlerContext ctx, PeerContext peer) {
-		boolean result = ctx != null;
+		boolean result = true;
+		result = result && ctx != null;
 		result = result && ctx.channel() != null;
+		result = result && peer != null;
+		result = result && peer.isTrusted();
 		result = result && peer.getChannelHandlerContext() != null;
 		result = result && Objects.equals(ctx.channel(), peer.getChannelHandlerContext().channel());
-		result = result && peer.isTrusted();
 		return result;
 	}
 

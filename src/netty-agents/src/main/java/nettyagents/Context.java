@@ -15,7 +15,7 @@ public class Context {
 
 	private static Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
-	public static boolean sslEnabled = Constants.DEFAULT_SSL_ENABLED;
+	public static boolean tlsEnabled = Constants.DEFAULT_TLS_ENABLED;
 
 	private boolean trustNegotiationMode = false;
 

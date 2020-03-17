@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -90,107 +91,17 @@ public class ServerAgent extends AbstractAgent {
 	public void startup() {
 		super.startup();
 
-		if (Context.sslEnabled) {
-			try {
-				PrivateKey key = getConfig().getPriKey();
-				X509Certificate cert = getConfig().getCert();
-
-				SslContextBuilder builder = SslContextBuilder.forServer(key, cert);
-				builder.trustManager(new TrustManager(() -> getContext()));
-
-				builder.clientAuth(ClientAuth.REQUIRE);
-				SslContext sslContext = builder.build();
-				setSslContext(sslContext);
-			} catch (IOException | GeneralSecurityException e) {
-				logger.error(e.getLocalizedMessage(), e);
-			}
-		}
-
 		this.shutdownRequested = false;
+
+		buildSSLContextIfEnabled();
 
 		this.bootstrap.group(this.bossGroup, this.workerGroup);
 		this.bootstrap.channel(NioServerSocketChannel.class);
-		this.bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
-
-			private SslHandler sslHandler;
-
-			@Override
-			public void initChannel(SocketChannel channel) throws Exception {
-				try {
-					ChannelPipeline pipeline = channel.pipeline();
-
-					SslContext sslContext = getSslContext();
-					if (sslContext != null) {
-						sslHandler = sslContext.newHandler(channel.alloc());
-						pipeline.addLast(sslHandler);
-					}
-
-					pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(new InboundMessageHandler.DataProvider() {
-
-						@Override
-						public Context getContext() {
-							return ServerAgent.this.getContext();
-						}
-
-						@Override
-						public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
-							boolean result = ctx != null;
-							result = result && ServerAgent.this.clients.values().stream().anyMatch(client -> Utils.verifyChannelHandlerContext(ctx, client));
-							return result;
-						}
-					}));
-
-					pipeline.addLast(new ChannelHandler() {
-
-						@Override
-						public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-							SocketAddress remoteAddress = ctx.channel().remoteAddress();
-
-							if (Context.sslEnabled) {
-								sslHandler.handshakeFuture().addListener(future -> {
-									try {
-										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
-										if (!getContext().isTrustNegotiationMode()) {
-											Utils.verifyCertChain(peerCerts, getContext().getTrustedCerts());
-										}
-
-										Certificate peerCert = peerCerts[0];
-										if (peerCert instanceof X509Certificate) {
-											PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, (X509Certificate) peerCert));
-											if (!getContext().isTrustNegotiationMode()) {
-												client.setTrusted(true);
-											}
-										}
-									} catch (Exception e) {
-										// logger.debug(e.getLocalizedMessage(), e);
-									}
-								});
-							} else {
-								ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, null));
-							}
-						}
-
-						@Override
-						public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-							SocketAddress remoteAddress = ctx.channel().remoteAddress();
-							ServerAgent.this.clients.remove(remoteAddress);
-						}
-
-						@Override
-						public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-						}
-					});
-				} catch (Exception e) {
-					logger.debug(e.getLocalizedMessage(), e);
-				}
-			}
-		});
-
+		this.bootstrap.childHandler(new ServerChannelInitializer());
 		this.bootstrap.option(ChannelOption.SO_BACKLOG, 128);
 		this.bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
 		// this.bootstrap.localAddress(new InetSocketAddress(CVApiConstants.DEFAULT_MANAGER_HOST, CVApiConstants.DEFAULT_MANAGER_PORT));
 		new Thread(() -> maintainConnection()).start();
-
 	}
 
 	public void shutdown() {
@@ -231,21 +142,123 @@ public class ServerAgent extends AbstractAgent {
 		return peerContext;
 	}
 
+	private void buildSSLContextIfEnabled() {
+		if (Context.tlsEnabled) {
+			try {
+				PrivateKey key = getConfig().getPriKey();
+				X509Certificate cert = getConfig().getCert();
+
+				SslContextBuilder builder = SslContextBuilder.forServer(key, cert);
+				builder.trustManager(new TrustManager(() -> getContext()));
+				builder.clientAuth(ClientAuth.REQUIRE);
+				SslContext sslContext = builder.build();
+				setSslContext(sslContext);
+			} catch (IOException | GeneralSecurityException e) {
+				logger.error(e.getLocalizedMessage(), e);
+			}
+		}
+	}
+
+	// ---
+
 	public static class Config extends AbstractConfig {
 
 		private int localPort = Constants.DEFAULT_SERVER_PORT;
-
-		// ---
 
 		public int getLocalPort() {
 			return localPort;
 		}
 
-		// ---
-
 		public Config setLocalPort(int localPort) {
 			this.localPort = localPort;
 			return this;
+		}
+	}
+
+	// ---
+
+	private final class ServerChannelInitializer extends ChannelInitializer<SocketChannel> implements InboundMessageHandler.DataProvider {
+
+		private SslHandler sslHandler;
+
+		@Override
+		public void initChannel(SocketChannel channel) throws Exception {
+			try {
+				ChannelPipeline pipeline = channel.pipeline();
+
+				SslContext sslContext = getSslContext();
+				if (sslContext != null) {
+					this.sslHandler = sslContext.newHandler(channel.alloc());
+					this.sslHandler.setHandshakeTimeout(Constants.DEFAULT_TLS_HANDSHAKE_TIMEOUT_SEC, TimeUnit.SECONDS);
+					pipeline.addLast(this.sslHandler);
+				}
+
+				pipeline.addLast(new MessageEncoder(), new MessageDecoder(), new InboundMessageHandler(this));
+				pipeline.addLast(new ServerChannelHandler(this.sslHandler));
+			} catch (Exception e) {
+				logger.debug(e.getLocalizedMessage(), e);
+			}
+		}
+
+		@Override
+		public Context getContext() {
+			return ServerAgent.this.getContext();
+		}
+
+		@Override
+		public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
+			boolean result = ctx != null;
+			result = result && ServerAgent.this.clients.values().stream().anyMatch(client -> Utils.verifyChannelHandlerContext(ctx, client));
+			return result;
+		}
+	}
+
+	private final class ServerChannelHandler implements ChannelHandler {
+
+		private SslHandler sslHandler;
+
+		public ServerChannelHandler(SslHandler sslHandler) {
+			this.sslHandler = sslHandler;
+		}
+
+		@Override
+		public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+			SocketAddress remoteAddress = ctx.channel().remoteAddress();
+
+			if (Context.tlsEnabled) {
+				this.sslHandler.handshakeFuture().addListener(future -> onHandshakeCompleted(ctx, remoteAddress));
+			} else {
+				ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, null));
+			}
+		}
+
+		@Override
+		public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+			SocketAddress remoteAddress = ctx.channel().remoteAddress();
+			ServerAgent.this.clients.remove(remoteAddress);
+		}
+
+		@Override
+		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		}
+
+		private void onHandshakeCompleted(ChannelHandlerContext ctx, SocketAddress remoteAddress) {
+			try {
+				Certificate[] peerCerts = this.sslHandler.engine().getSession().getPeerCertificates();
+				if (!getContext().isTrustNegotiationMode()) {
+					Utils.verifyCertChain(peerCerts, getContext().getTrustedCerts());
+				}
+
+				Certificate peerCert = peerCerts[0];
+				if (peerCert instanceof X509Certificate) {
+					PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, (X509Certificate) peerCert));
+					if (!getContext().isTrustNegotiationMode()) {
+						client.setTrusted(true);
+					}
+				}
+			} catch (Exception e) {
+				// logger.debug(e.getLocalizedMessage(), e);
+			}
 		}
 	}
 }
