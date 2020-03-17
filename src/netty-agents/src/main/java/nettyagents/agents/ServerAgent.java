@@ -150,15 +150,16 @@ public class ServerAgent extends AbstractAgent {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
-										if (!getContext().isPeerIdentificationMode()) {
+										if (!getContext().isTrustNegotiationMode()) {
 											Utils.verifyCertChain(peerCerts, getContext().getTrustedPeers().values());
 										}
 
 										Certificate peerCert = peerCerts[0];
-										PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, peerCert));
-
-										if (!getContext().isPeerIdentificationMode()) {
-											client.setTrusted(true);
+										if (X509Certificate.class.isInstance(peerCert)) {
+											PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, (X509Certificate) peerCert));
+											if (!getContext().isTrustNegotiationMode()) {
+												client.setTrusted(true);
+											}
 										}
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);
@@ -223,9 +224,9 @@ public class ServerAgent extends AbstractAgent {
 		}
 	}
 
-	private PeerContext addOrUpdateClientContext(SocketAddress key, PeerContext peerContext, ChannelHandlerContext channelHandlerContext, Certificate peerCert) {
+	private PeerContext addOrUpdateClientContext(SocketAddress key, PeerContext peerContext, ChannelHandlerContext channelHandlerContext, X509Certificate peerCert) {
 		peerContext = peerContext != null ? peerContext : new PeerContext();
-		peerContext.setCert((X509Certificate) peerCert);
+		peerContext.setCert(peerCert);
 		peerContext.setChannelHandlerContext(channelHandlerContext);
 		return peerContext;
 	}

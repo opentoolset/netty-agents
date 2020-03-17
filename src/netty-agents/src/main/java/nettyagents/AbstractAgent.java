@@ -44,11 +44,11 @@ public abstract class AbstractAgent {
 	}
 
 	public void startPeerIdentificationMode() {
-		this.context.setPeerIdentificationMode(true);
+		this.context.setTrustNegotiationMode(true);
 	}
 
 	public void stopPeerIdentificationMode() {
-		this.context.setPeerIdentificationMode(false);
+		this.context.setTrustNegotiationMode(false);
 	}
 
 	// ---
@@ -128,14 +128,14 @@ public abstract class AbstractAgent {
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			if (!supplier.get().isPeerIdentificationMode()) {
+			if (!supplier.get().isTrustNegotiationMode()) {
 				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedPeers().values());
 			}
 		}
 
 		@Override
 		public void checkServerTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
-			if (!supplier.get().isPeerIdentificationMode()) {
+			if (!supplier.get().isTrustNegotiationMode()) {
 				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedPeers().values());
 			}
 		}

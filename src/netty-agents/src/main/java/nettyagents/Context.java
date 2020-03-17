@@ -16,7 +16,7 @@ public class Context {
 
 	public static boolean sslEnabled = Constants.DEFAULT_SSL_ENABLED;
 
-	private boolean peerIdentificationMode = false;
+	private boolean trustNegotiationMode = false;
 
 	private MessageSender messageSender = new MessageSender(this);
 
@@ -32,12 +32,12 @@ public class Context {
 
 	// ---
 
-	public boolean isPeerIdentificationMode() {
-		return peerIdentificationMode;
+	public boolean isTrustNegotiationMode() {
+		return trustNegotiationMode;
 	}
 
-	public void setPeerIdentificationMode(boolean peerIdentificationMode) {
-		this.peerIdentificationMode = peerIdentificationMode;
+	public void setTrustNegotiationMode(boolean peerIdentificationMode) {
+		this.trustNegotiationMode = peerIdentificationMode;
 	}
 
 	public MessageSender getMessageSender() {

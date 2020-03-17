@@ -24,7 +24,7 @@ public class MessageSender {
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext) {
-		if (this.context.isPeerIdentificationMode()) {
+		if (this.context.isTrustNegotiationMode()) {
 			return null;
 		}
 
@@ -32,7 +32,7 @@ public class MessageSender {
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext, int timeoutSec) {
-		if (this.context.isPeerIdentificationMode()) {
+		if (this.context.isTrustNegotiationMode()) {
 			return null;
 		}
 
@@ -70,7 +70,7 @@ public class MessageSender {
 	}
 
 	public <T extends AbstractMessage> boolean sendMessage(T message, PeerContext peerContext) {
-		if (this.context.isPeerIdentificationMode()) {
+		if (this.context.isTrustNegotiationMode()) {
 			return false;
 		}
 

@@ -139,7 +139,7 @@ public class ClientAgent extends AbstractAgent {
 
 						@Override
 						public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
-							return getContext().isPeerIdentificationMode() || Utils.verifyChannelHandlerContext(ctx, ClientAgent.this.server);
+							return getContext().isTrustNegotiationMode() || Utils.verifyChannelHandlerContext(ctx, ClientAgent.this.server);
 						}
 					}));
 
@@ -151,7 +151,7 @@ public class ClientAgent extends AbstractAgent {
 								sslHandler.handshakeFuture().addListener(future -> {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
-										if (!getContext().isPeerIdentificationMode()) {
+										if (!getContext().isTrustNegotiationMode()) {
 											Utils.verifyCertChain(peerCerts, getContext().getTrustedPeers().values());
 										}
 
@@ -160,7 +160,7 @@ public class ClientAgent extends AbstractAgent {
 										server.setCert((X509Certificate) peerCert);
 										server.setChannelHandlerContext(ctx);
 
-										if (!getContext().isPeerIdentificationMode()) {
+										if (!getContext().isTrustNegotiationMode()) {
 											server.setTrusted(true);
 										}
 									} catch (Exception e) {
