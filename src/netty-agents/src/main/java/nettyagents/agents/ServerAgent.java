@@ -246,14 +246,15 @@ public class ServerAgent extends AbstractAgent {
 		private void onHandshakeCompleted(ChannelHandlerContext ctx, SocketAddress remoteAddress) {
 			try {
 				Certificate[] peerCerts = this.sslHandler.engine().getSession().getPeerCertificates();
-				if (!getContext().isTrustNegotiationMode()) {
-					Utils.verifyCertChain(peerCerts, getContext().getTrustedCerts());
+				Context context = getContext();
+				if (!context.isTrustNegotiationMode()) {
+					Utils.verifyCertChain(peerCerts, context.getTrustedCerts());
 				}
 
 				Certificate peerCert = peerCerts[0];
 				if (peerCert instanceof X509Certificate) {
 					PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, (X509Certificate) peerCert));
-					if (!getContext().isTrustNegotiationMode()) {
+					if (!context.isTrustNegotiationMode()) {
 						client.setTrusted(true);
 					}
 				}
