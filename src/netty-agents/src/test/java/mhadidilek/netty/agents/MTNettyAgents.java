@@ -102,12 +102,10 @@ public class MTNettyAgents {
 			clientAgent.getContext().getTrustedCerts().put(serverFingerprint, serverCert);
 		}
 
+		serverAgent.stopPeerIdentificationMode();
+		clientAgent.stopPeerIdentificationMode();
+
 		doAgentOperations(serverAgent, clientAgent);
-
-//		serverAgent.stopPeerIdentificationMode();
-//		clientAgent.stopPeerIdentificationMode();
-
-//		doAgentOperations(serverAgent, clientAgent);
 	}
 
 	private void doTLSConfigs(ServerAgent serverAgent, ClientAgent clientAgent) throws CertificateException, CertificateEncodingException, InvalidKeyException {
