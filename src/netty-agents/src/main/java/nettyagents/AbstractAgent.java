@@ -129,14 +129,14 @@ public abstract class AbstractAgent {
 		@Override
 		public void checkClientTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
 			if (!supplier.get().isTrustNegotiationMode()) {
-				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedPeers().values());
+				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedCerts());
 			}
 		}
 
 		@Override
 		public void checkServerTrusted(X509Certificate[] peerCertChain, String authType) throws CertificateException {
 			if (!supplier.get().isTrustNegotiationMode()) {
-				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedPeers().values());
+				Utils.verifyCertChain(peerCertChain, supplier.get().getTrustedCerts());
 			}
 		}
 

@@ -22,8 +22,8 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -49,18 +49,20 @@ public class Utils {
 		return tester.get();
 	}
 
-	public static void verifyCertChain(Certificate[] peerCertChain, Collection<PeerContext> trustedPeers) throws CertificateException {
+	public static void verifyCertChain(Certificate[] peerCertChain, Map<String, X509Certificate> trustedCerts) throws CertificateException {
 		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-		Certificate certPEM = peerCertChain[0];
-		CertPath certPath = certFactory.generateCertPath(Arrays.asList(certPEM));
+		Certificate cert = peerCertChain[0];
+		CertPath certPath = certFactory.generateCertPath(Arrays.asList(cert));
 
 		try {
 			CertPathValidator certPathValidator = CertPathValidator.getInstance("PKIX");
 
-			for (PeerContext trustedPeer : trustedPeers) {
+			String fingerprint = getFingerprintAsHex(cert);
+			X509Certificate trustedCert = trustedCerts.get(fingerprint);
+			if (trustedCert != null) {
 				try {
 					Set<TrustAnchor> trustAnchors = new HashSet<>();
-					TrustAnchor trustAnchor = new TrustAnchor(trustedPeer.getCert(), null);
+					TrustAnchor trustAnchor = new TrustAnchor(trustedCert, null);
 					trustAnchors.add(trustAnchor);
 
 					PKIXParameters params = new PKIXParameters(trustAnchors);

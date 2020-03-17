@@ -52,17 +52,13 @@ public class MTNettyAgents {
 		{
 			X509Certificate serverCert = serverAgent.getConfig().getCert();
 			String serverFingerprint = Utils.getFingerprintAsHex(serverCert);
-			PeerContext peer = new PeerContext();
-			peer.setCert(serverCert);
-			clientAgent.getContext().getTrustedPeers().put(serverFingerprint, peer);
+			clientAgent.getContext().getTrustedCerts().put(serverFingerprint, serverCert);
 		}
 
 		{
 			X509Certificate clientCert = clientAgent.getConfig().getCert();
 			String clientFingerprint = Utils.getFingerprintAsHex(clientCert);
-			PeerContext peer = new PeerContext();
-			peer.setCert(clientCert);
-			serverAgent.getContext().getTrustedPeers().put(clientFingerprint, peer);
+			serverAgent.getContext().getTrustedCerts().put(clientFingerprint, clientCert);
 		}
 
 		doStartups(serverAgent, clientAgent);
@@ -93,9 +89,7 @@ public class MTNettyAgents {
 
 			{
 				client.setTrusted(true);
-				PeerContext peer = new PeerContext();
-				peer.setCert(clientCert);
-				serverAgent.getContext().getTrustedPeers().put(clientFingerprint, peer);
+				serverAgent.getContext().getTrustedCerts().put(clientFingerprint, clientCert);
 			}
 		}
 
@@ -105,9 +99,7 @@ public class MTNettyAgents {
 
 		{
 			clientAgent.getServer().setTrusted(true);
-			PeerContext peer = new PeerContext();
-			peer.setCert(serverCert);
-			clientAgent.getContext().getTrustedPeers().put(serverFingerprint, peer);
+			clientAgent.getContext().getTrustedCerts().put(serverFingerprint, serverCert);
 		}
 
 		serverAgent.stopPeerIdentificationMode();

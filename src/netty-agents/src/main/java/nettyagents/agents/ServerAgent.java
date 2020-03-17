@@ -151,7 +151,7 @@ public class ServerAgent extends AbstractAgent {
 									try {
 										Certificate[] peerCerts = sslHandler.engine().getSession().getPeerCertificates();
 										if (!getContext().isTrustNegotiationMode()) {
-											Utils.verifyCertChain(peerCerts, getContext().getTrustedPeers().values());
+											Utils.verifyCertChain(peerCerts, getContext().getTrustedCerts());
 										}
 
 										Certificate peerCert = peerCerts[0];

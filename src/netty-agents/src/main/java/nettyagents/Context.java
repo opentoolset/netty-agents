@@ -4,6 +4,7 @@
 // ---
 package nettyagents;
 
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class Context {
 
 	private MessageReceiver messageReceiver = new MessageReceiver();
 
-	private Map<String, PeerContext> trustedPeers = new HashMap<>();
+	private Map<String, X509Certificate> trustedCerts = new HashMap<>();
 
 	// ---
 
@@ -48,7 +49,7 @@ public class Context {
 		return messageReceiver;
 	}
 
-	public Map<String, PeerContext> getTrustedPeers() {
-		return trustedPeers;
+	public Map<String, X509Certificate> getTrustedCerts() {
+		return trustedCerts;
 	}
 }
