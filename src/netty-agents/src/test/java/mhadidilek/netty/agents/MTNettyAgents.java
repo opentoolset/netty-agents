@@ -88,7 +88,7 @@ public class MTNettyAgents {
 			System.out.printf("Remote socket: %s - Client fingerprint: %s\n", socketAddress, clientFingerprint);
 
 			{
-//				client.setTrusted(true);
+				client.setTrusted(true);
 				serverAgent.getContext().getTrustedCerts().put(clientFingerprint, clientCert);
 			}
 		}
