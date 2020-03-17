@@ -2,13 +2,13 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package nettyagents;
+package org.opentoolset.nettyagents;
 
+import org.opentoolset.nettyagents.MessageSender.OperationContext;
 import org.slf4j.Logger;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import nettyagents.MessageSender.OperationContext;
 
 public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 

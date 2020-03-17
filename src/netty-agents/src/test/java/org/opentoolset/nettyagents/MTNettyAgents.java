@@ -2,7 +2,7 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package mhadidilek.netty.agents;
+package org.opentoolset.nettyagents;
 
 import java.net.SocketAddress;
 import java.security.InvalidKeyException;
@@ -15,16 +15,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.opentoolset.nettyagents.Context;
+import org.opentoolset.nettyagents.PeerContext;
+import org.opentoolset.nettyagents.Utils;
+import org.opentoolset.nettyagents.TestData.SampleMessage;
+import org.opentoolset.nettyagents.TestData.SampleRequest;
+import org.opentoolset.nettyagents.TestData.SampleResponse;
+import org.opentoolset.nettyagents.agents.ClientAgent;
+import org.opentoolset.nettyagents.agents.ServerAgent;
 
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import mhadidilek.netty.agents.TestData.SampleMessage;
-import mhadidilek.netty.agents.TestData.SampleRequest;
-import mhadidilek.netty.agents.TestData.SampleResponse;
-import nettyagents.Context;
-import nettyagents.PeerContext;
-import nettyagents.Utils;
-import nettyagents.agents.ClientAgent;
-import nettyagents.agents.ServerAgent;
 
 public class MTNettyAgents {
 

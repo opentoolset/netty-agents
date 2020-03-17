@@ -2,7 +2,7 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package nettyagents;
+package org.opentoolset.nettyagents;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

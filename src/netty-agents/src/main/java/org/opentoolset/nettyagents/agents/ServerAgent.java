@@ -2,7 +2,7 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package nettyagents.agents;
+package org.opentoolset.nettyagents.agents;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -15,6 +15,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import org.opentoolset.nettyagents.AbstractAgent;
+import org.opentoolset.nettyagents.AbstractMessage;
+import org.opentoolset.nettyagents.AbstractRequest;
+import org.opentoolset.nettyagents.Constants;
+import org.opentoolset.nettyagents.Context;
+import org.opentoolset.nettyagents.InboundMessageHandler;
+import org.opentoolset.nettyagents.MessageDecoder;
+import org.opentoolset.nettyagents.MessageEncoder;
+import org.opentoolset.nettyagents.PeerContext;
+import org.opentoolset.nettyagents.Utils;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -31,16 +42,6 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
-import nettyagents.AbstractAgent;
-import nettyagents.AbstractMessage;
-import nettyagents.AbstractRequest;
-import nettyagents.Constants;
-import nettyagents.Context;
-import nettyagents.InboundMessageHandler;
-import nettyagents.MessageDecoder;
-import nettyagents.MessageEncoder;
-import nettyagents.PeerContext;
-import nettyagents.Utils;
 
 public class ServerAgent extends AbstractAgent {
 

@@ -2,10 +2,10 @@
 // Copyright 2020 netty-agents team
 // All rights reserved
 // ---
-package mhadidilek.netty.agents;
+package org.opentoolset.nettyagents;
 
-import nettyagents.AbstractMessage;
-import nettyagents.AbstractRequest;
+import org.opentoolset.nettyagents.AbstractMessage;
+import org.opentoolset.nettyagents.AbstractRequest;
 
 public interface TestData {
 

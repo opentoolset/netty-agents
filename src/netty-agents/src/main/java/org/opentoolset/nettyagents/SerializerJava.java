@@ -1,11 +1,10 @@
-package nettyagents;
+package org.opentoolset.nettyagents;
 
 import java.io.Serializable;
 
 import org.apache.commons.lang3.SerializationException;
 import org.apache.commons.lang3.SerializationUtils;
-
-import nettyagents.MessageWrapper.Serializer;
+import org.opentoolset.nettyagents.MessageWrapper.Serializer;
 
 public class SerializerJava implements Serializer {
 

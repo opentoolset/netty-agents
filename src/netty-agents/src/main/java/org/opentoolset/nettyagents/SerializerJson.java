@@ -1,13 +1,13 @@
-package nettyagents;
+package org.opentoolset.nettyagents;
 
 import java.io.IOException;
+
+import org.opentoolset.nettyagents.MessageWrapper.Serializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
-import nettyagents.MessageWrapper.Serializer;
 
 public class SerializerJson implements Serializer {
 
