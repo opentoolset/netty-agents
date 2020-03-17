@@ -74,8 +74,8 @@ public class ClientAgent extends AbstractAgent {
 	public void stopPeerIdentificationMode() {
 		super.stopPeerIdentificationMode();
 		if (!this.server.isTrusted()) {
-			this.server.setChannelHandlerContext(null);
 			this.server.getChannelHandlerContext().close();
+			this.server.setChannelHandlerContext(null);
 		}
 	}
 
@@ -156,12 +156,13 @@ public class ClientAgent extends AbstractAgent {
 										}
 
 										Certificate peerCert = peerCerts[0];
-										PeerContext server = ClientAgent.this.server;
-										server.setCert((X509Certificate) peerCert);
-										server.setChannelHandlerContext(ctx);
-
-										if (!getContext().isTrustNegotiationMode()) {
-											server.setTrusted(true);
+										if (peerCert instanceof X509Certificate) {
+											PeerContext server = ClientAgent.this.server;
+											server.setCert((X509Certificate) peerCert);
+											server.setChannelHandlerContext(ctx);
+											if (!getContext().isTrustNegotiationMode()) {
+												server.setTrusted(true);
+											}
 										}
 									} catch (Exception e) {
 										// logger.debug(e.getLocalizedMessage(), e);

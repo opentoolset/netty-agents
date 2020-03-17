@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -132,11 +133,16 @@ public class Utils {
 	}
 
 	public static boolean verifyChannelHandlerContext(ChannelHandlerContext ctx, PeerContext peer) {
-		return ctxBelongsToTrustedPeer(ctx, peer);
+		return ctxBelongsToATrustedPeer(ctx, peer);
 	}
 
-	public static boolean ctxBelongsToTrustedPeer(ChannelHandlerContext ctx, PeerContext peer) {
-		return ctx != null && ctx.equals(peer.getChannelHandlerContext()) && peer.isTrusted();
+	public static boolean ctxBelongsToATrustedPeer(ChannelHandlerContext ctx, PeerContext peer) {
+		boolean result = ctx != null;
+		result = result && ctx.channel() != null;
+		result = result && peer.getChannelHandlerContext() != null;
+		result = result && Objects.equals(ctx.channel(), peer.getChannelHandlerContext().channel());
+		result = result && peer.isTrusted();
+		return result;
 	}
 
 	// ---

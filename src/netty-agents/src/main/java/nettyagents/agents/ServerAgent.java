@@ -79,9 +79,9 @@ public class ServerAgent extends AbstractAgent {
 			SocketAddress key = entry.getKey();
 			PeerContext client = entry.getValue();
 			if (!client.isTrusted()) {
-				client.setChannelHandlerContext(null);
-				client.getChannelHandlerContext().close();
 				clients.remove(key);
+				client.getChannelHandlerContext().close();
+				client.setChannelHandlerContext(null);
 			}
 		}
 	}
@@ -155,7 +155,7 @@ public class ServerAgent extends AbstractAgent {
 										}
 
 										Certificate peerCert = peerCerts[0];
-										if (X509Certificate.class.isInstance(peerCert)) {
+										if (peerCert instanceof X509Certificate) {
 											PeerContext client = ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, (X509Certificate) peerCert));
 											if (!getContext().isTrustNegotiationMode()) {
 												client.setTrusted(true);
