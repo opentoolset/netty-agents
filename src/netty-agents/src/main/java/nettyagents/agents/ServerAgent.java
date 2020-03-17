@@ -207,8 +207,9 @@ public class ServerAgent extends AbstractAgent {
 
 		@Override
 		public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
-			boolean result = ctx != null;
-			result = result && ServerAgent.this.clients.values().stream().anyMatch(client -> Utils.verifyChannelHandlerContext(ctx, client));
+			boolean result = true;
+			result = result || getContext().isTrustNegotiationMode();
+			result = result || ServerAgent.this.clients.values().stream().anyMatch(client -> Utils.verifyChannelHandlerContext(ctx, client));
 			return result;
 		}
 	}

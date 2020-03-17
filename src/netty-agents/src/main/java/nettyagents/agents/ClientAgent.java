@@ -238,7 +238,10 @@ public class ClientAgent extends AbstractAgent {
 
 		@Override
 		public boolean verifyChannelHandlerContext(ChannelHandlerContext ctx) {
-			return getContext().isTrustNegotiationMode() || Utils.verifyChannelHandlerContext(ctx, ClientAgent.this.server);
+			boolean result = true;
+			result = result || getContext().isTrustNegotiationMode();
+			result = result || Utils.verifyChannelHandlerContext(ctx, ClientAgent.this.server);
+			return result;
 		}
 	}
 
