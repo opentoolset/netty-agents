@@ -153,7 +153,7 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	private void buildSSLContextIfEnabled() {
-		if (Context.tlsEnabled) {
+		if (getConfig().isTlsEnabled()) {
 			try {
 				KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 				{
@@ -209,7 +209,7 @@ public class ClientAgent extends AbstractAgent {
 
 	// ---
 
-	private final class ClientChannelInitializer extends ChannelInitializer<SocketChannel> implements InboundMessageHandler.DataProvider {
+	private final class ClientChannelInitializer extends ChannelInitializer<SocketChannel> implements InboundMessageHandler.Provider {
 
 		private SslHandler sslHandler;
 
@@ -220,7 +220,7 @@ public class ClientAgent extends AbstractAgent {
 
 				SslContext sslContext = getSslContext();
 				if (sslContext != null) {
-					this.sslHandler = sslContext.newHandler(channel.alloc(), getConfig().getRemoteHost(), getConfig().getRemotePort());
+					this.sslHandler = sslContext.newHandler(channel.alloc(), ClientAgent.this.getConfig().getRemoteHost(), ClientAgent.this.getConfig().getRemotePort());
 					this.sslHandler.setHandshakeTimeout(Constants.DEFAULT_TLS_HANDSHAKE_TIMEOUT_SEC, TimeUnit.SECONDS);
 					pipeline.addLast(this.sslHandler);
 				}
@@ -230,6 +230,11 @@ public class ClientAgent extends AbstractAgent {
 			} catch (Exception e) {
 				logger.debug(e.getLocalizedMessage(), e);
 			}
+		}
+		
+		@Override
+		public AbstractConfig getConfig() {
+			return ClientAgent.this.getConfig();
 		}
 
 		@Override
@@ -256,7 +261,7 @@ public class ClientAgent extends AbstractAgent {
 
 		@Override
 		public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-			if (Context.tlsEnabled) {
+			if (getConfig().isTlsEnabled()) {
 				sslHandler.handshakeFuture().addListener(future -> onHandshakeCompleted(ctx));
 			} else {
 				ClientAgent.this.server.setChannelHandlerContext(ctx);

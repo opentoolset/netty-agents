@@ -144,7 +144,7 @@ public class ServerAgent extends AbstractAgent {
 	}
 
 	private void buildSSLContextIfEnabled() {
-		if (Context.tlsEnabled) {
+		if (getConfig().isTlsEnabled()) {
 			try {
 				PrivateKey key = getConfig().getPriKey();
 				X509Certificate cert = getConfig().getCert();
@@ -178,7 +178,7 @@ public class ServerAgent extends AbstractAgent {
 
 	// ---
 
-	private final class ServerChannelInitializer extends ChannelInitializer<SocketChannel> implements InboundMessageHandler.DataProvider {
+	private final class ServerChannelInitializer extends ChannelInitializer<SocketChannel> implements InboundMessageHandler.Provider {
 
 		private SslHandler sslHandler;
 
@@ -199,6 +199,11 @@ public class ServerAgent extends AbstractAgent {
 			} catch (Exception e) {
 				logger.debug(e.getLocalizedMessage(), e);
 			}
+		}
+
+		@Override
+		public AbstractConfig getConfig() {
+			return ServerAgent.this.getConfig();
 		}
 
 		@Override
@@ -227,7 +232,7 @@ public class ServerAgent extends AbstractAgent {
 		public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 			SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
-			if (Context.tlsEnabled) {
+			if (getConfig().isTlsEnabled()) {
 				this.sslHandler.handshakeFuture().addListener(future -> onHandshakeCompleted(ctx, remoteAddress));
 			} else {
 				ServerAgent.this.clients.compute(remoteAddress, (key, value) -> addOrUpdateClientContext(key, value, ctx, null));

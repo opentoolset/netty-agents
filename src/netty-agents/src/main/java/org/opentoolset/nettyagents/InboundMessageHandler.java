@@ -4,6 +4,7 @@
 // ---
 package org.opentoolset.nettyagents;
 
+import org.opentoolset.nettyagents.AbstractAgent.AbstractConfig;
 import org.opentoolset.nettyagents.MessageSender.OperationContext;
 import org.slf4j.Logger;
 
@@ -14,9 +15,11 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	private static Logger logger = Context.getLogger();
 
-	private DataProvider dataProvider;
+	private Provider provider;
 
-	public interface DataProvider {
+	public interface Provider {
+
+		AbstractConfig getConfig();
 
 		Context getContext();
 
@@ -25,8 +28,8 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	// ---
 
-	public InboundMessageHandler(DataProvider dataProvider) {
-		this.dataProvider = dataProvider;
+	public InboundMessageHandler(Provider provider) {
+		this.provider = provider;
 	}
 
 	@Override
@@ -36,7 +39,7 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (Context.tlsEnabled && !this.dataProvider.verifyChannelHandlerContext(ctx)) {
+		if (this.provider.getConfig().isTlsEnabled() && !this.provider.verifyChannelHandlerContext(ctx)) {
 			return;
 		}
 
@@ -45,7 +48,7 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 
 			String correlationId = messageWrapper.getCorrelationId();
 			if (correlationId != null) {
-				OperationContext operationContext = this.dataProvider.getContext().getMessageSender().getWaitingRequests().get(correlationId);
+				OperationContext operationContext = this.provider.getContext().getMessageSender().getWaitingRequests().get(correlationId);
 				if (operationContext != null) {
 					operationContext.setResponseWrapper(messageWrapper);
 					Thread thread = operationContext.getThread();
@@ -60,11 +63,11 @@ public class InboundMessageHandler extends ChannelInboundHandlerAdapter {
 			} else {
 				String id = messageWrapper.getId();
 				if (id != null) {
-					AbstractMessage response = this.dataProvider.getContext().getMessageReceiver().handleRequest(messageWrapper);
+					AbstractMessage response = this.provider.getContext().getMessageReceiver().handleRequest(messageWrapper);
 					MessageWrapper responseWrapper = MessageWrapper.createResponse(response, id);
 					ctx.writeAndFlush(responseWrapper);
 				} else {
-					this.dataProvider.getContext().getMessageReceiver().handleMessage(messageWrapper);
+					this.provider.getContext().getMessageReceiver().handleMessage(messageWrapper);
 				}
 			}
 		} else {

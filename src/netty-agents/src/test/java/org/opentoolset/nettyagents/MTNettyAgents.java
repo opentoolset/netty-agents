@@ -15,9 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.opentoolset.nettyagents.Context;
-import org.opentoolset.nettyagents.PeerContext;
-import org.opentoolset.nettyagents.Utils;
 import org.opentoolset.nettyagents.TestData.SampleMessage;
 import org.opentoolset.nettyagents.TestData.SampleRequest;
 import org.opentoolset.nettyagents.TestData.SampleResponse;
@@ -35,7 +32,6 @@ public class MTNettyAgents {
 		ServerAgent serverAgent = new ServerAgent();
 		ClientAgent clientAgent = new ClientAgent();
 
-		Context.tlsEnabled = false;
 		doStartups(serverAgent, clientAgent);
 		doAgentOperations(serverAgent, clientAgent);
 	}
@@ -120,6 +116,7 @@ public class MTNettyAgents {
 			String serverPriKey = Utils.base64Encode(cert.key().getEncoded());
 			String serverCert = Utils.base64Encode(cert.cert().getEncoded());
 
+			serverAgent.getConfig().setTlsEnabled(true);
 			serverAgent.getConfig().setPriKey(serverPriKey);
 			serverAgent.getConfig().setCert(serverCert);
 		}
@@ -129,6 +126,7 @@ public class MTNettyAgents {
 			String clientPriKey = Utils.base64Encode(cert.key().getEncoded());
 			String clientCert = Utils.base64Encode(cert.cert().getEncoded());
 
+			clientAgent.getConfig().setTlsEnabled(true);
 			clientAgent.getConfig().setPriKey(clientPriKey);
 			clientAgent.getConfig().setCert(clientCert);
 		}

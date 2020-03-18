@@ -15,7 +15,7 @@ public class Context {
 
 	private static Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
-	public static boolean tlsEnabled = Constants.DEFAULT_TLS_ENABLED;
+//	private boolean tlsEnabled = Constants.DEFAULT_TLS_ENABLED;
 
 	private boolean trustNegotiationMode = false;
 
@@ -33,12 +33,12 @@ public class Context {
 
 	// ---
 
+//	public boolean isTlsEnabled() {
+//		return tlsEnabled;
+//	}
+	
 	public boolean isTrustNegotiationMode() {
 		return trustNegotiationMode;
-	}
-
-	public void setTrustNegotiationMode(boolean peerIdentificationMode) {
-		this.trustNegotiationMode = peerIdentificationMode;
 	}
 
 	public MessageSender getMessageSender() {
@@ -51,5 +51,15 @@ public class Context {
 
 	public Map<String, X509Certificate> getTrustedCerts() {
 		return trustedCerts;
+	}
+
+	// ---
+	
+//	public void setTlsEnabled(boolean tlsEnabled) {
+//		this.tlsEnabled = tlsEnabled;
+//	}
+	
+	public void setTrustNegotiationMode(boolean peerIdentificationMode) {
+		this.trustNegotiationMode = peerIdentificationMode;
 	}
 }

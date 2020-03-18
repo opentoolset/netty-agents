@@ -72,10 +72,15 @@ public abstract class AbstractAgent {
 
 	public static class AbstractConfig {
 
+		private boolean tlsEnabled = Constants.DEFAULT_TLS_ENABLED;
 		private PrivateKey priKey;
 		private X509Certificate cert;
 
 		// ---
+
+		public boolean isTlsEnabled() {
+			return tlsEnabled;
+		}
 
 		public PrivateKey getPriKey() {
 			return priKey;
@@ -86,6 +91,11 @@ public abstract class AbstractAgent {
 		}
 
 		// ---
+
+		public AbstractConfig setTlsEnabled(boolean tlsEnabled) {
+			this.tlsEnabled = tlsEnabled;
+			return this;
+		}
 
 		public AbstractConfig setPriKey(String priKeyStr) throws InvalidKeyException {
 			return setPriKey(Utils.buildPriKey(priKeyStr));
