@@ -6,6 +6,7 @@ import org.apache.commons.lang3.SerializationException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.opentoolset.nettyagents.MessageWrapper.Serializer;
 
+@Deprecated
 public class SerializerJava implements Serializer {
 
 	@Override
