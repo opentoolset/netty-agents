@@ -2,13 +2,15 @@
 
 Easy to use, message based, synchronous communication library based on Netty (https://netty.io/).
 
+Project Web site: https://www.opentoolset.org/
+
 ## Features
-- Easy and ready-to-use communication agents based on Netty library
-- Eliminates repeated and boilerplate code when using Netty as a communication library
-- Supports design and usage of a strongly-typed, well-defined, message based communication interfaces
-- Provides bi-directional, synchronous (blocking request-response based) model for communication requiremens similar to REST while using stateful channels between each peers 
-- Provides security with mutual TLS authentication with certificates
-- Supports multi-client connections
+* Easy and ready-to-use communication agents based on Netty library
+* Eliminates repeated and boilerplate code when using Netty as a communication library
+* Strongly-typed, well-defined, message based communication interfaces
+* Suppors synchronous (request-response based) communication through stateful channels
+* Provides security with mutual TLS authentication with certificates
+* Supports bi-directional, multi-client communication
 
 ## Sample Use Case
 
