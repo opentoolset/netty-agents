@@ -44,7 +44,7 @@
 
 	<distributionManagement>
 		<repository>
-			<id>bintray-repo-netty-agents</id>
+			<id>bintray-repo</id>
 			<url>https://api.bintray.com/maven/${bintray.subject}/${bintray.repo}/${bintray.package}/;publish=1</url>
 		</repository>
 	</distributionManagement>
