@@ -21,6 +21,11 @@ import org.slf4j.Logger;
 
 import io.netty.handler.ssl.SslContext;
 
+/**
+ * Abstract Agent class contains common members for its childs ie. Client and Server Agents.
+ * 
+ * @author hadi
+ */
 public abstract class AbstractAgent {
 
 	protected static Logger logger = Context.getLogger();
@@ -31,39 +36,85 @@ public abstract class AbstractAgent {
 
 	// ---
 
+	/**
+	 * Configuration object including configuration parameters for this agent.<br />
+	 * Configuration parameters can be changed if needed. <br />
+	 * All configuration adjustments should be made before calling the method "startup".
+	 * 
+	 * @return Configuration object
+	 */
 	protected abstract AbstractConfig getConfig();
 
 	// ---
 
+	/**
+	 * Creates a request handler for a specific request type
+	 * 
+	 * @param <TReq>
+	 * @param <TResp>
+	 * @param classOfRequest Specifies the request type
+	 * @param function Specifies the function which will be executed when this request is made
+	 */
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> void setRequestHandler(Class<TReq> classOfRequest, Function<TReq, TResp> function) {
 		this.context.getMessageReceiver().setRequestHandler(classOfRequest, function);
 	}
 
+	/**
+	 * Creates a request handler for a specific message type
+	 * 
+	 * @param <T>
+	 * @param classOfMessage Specifies the message type
+	 * @param consumer Specifies the consumer which will accept and process this message when it reaches to this agent
+	 */
 	public <T extends AbstractMessage> void setMessageHandler(Class<T> classOfMessage, Consumer<T> consumer) {
 		this.context.getMessageReceiver().setMessageHandler(classOfMessage, consumer);
 	}
 
+	/**
+	 * Starts peer identification mode. In this mode it is only allowed to exchage certificates between peers. No other communication is allowed. Any peer may give trust to other peers in this mode if they are authentic.
+	 */
 	public void startPeerIdentificationMode() {
 		this.context.setTrustNegotiationMode(true);
 	}
 
+	/**
+	 * Ends peer identification mod. After ending this mode, peers can communicate with each other.
+	 */
 	public void stopPeerIdentificationMode() {
 		this.context.setTrustNegotiationMode(false);
 	}
 
 	// ---
 
+	/**
+	 * Returns context object holding several state variables during the life-cycle of this agent
+	 * 
+	 * @return
+	 */
 	public Context getContext() {
 		return context;
 	}
 
+	/**
+	 * Starts the agent up ie. by entering listening mode (for server) or making connection attempts to configured server-peer
+	 */
 	protected void startup() {
 	}
 
+	/**
+	 * Returns SSL context object for using in SSL related operations
+	 * 
+	 * @return
+	 */
 	protected SslContext getSslContext() {
 		return sslContext;
 	}
 
+	/**
+	 * Sets SSL context object for using in SSL related operations
+	 * 
+	 * @return
+	 */
 	protected void setSslContext(SslContext sslContext) {
 		this.sslContext = sslContext;
 	}

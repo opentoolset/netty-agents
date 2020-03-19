@@ -43,6 +43,11 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 
+/**
+ * Server Agent is a type of agent which makes listens incoming connection requests to this agent, and maintain communication with each connected peer. 
+ * 
+ * @author hadi
+ */
 public class ServerAgent extends AbstractAgent {
 
 	private EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -57,18 +62,16 @@ public class ServerAgent extends AbstractAgent {
 
 	// ---
 
-	/**
-	 * Configuration object including configuration parameters for this agent.<br />
-	 * Configuration parameters can be changed if needed. <br />
-	 * All configuration adjustments should be made before calling the method "startup".
-	 * 
-	 * @return Configuration object
-	 */
 	@Override
 	public Config getConfig() {
 		return config;
 	}
 
+	/**
+	 * Returns map of clients with socket address as key and PeerContext object as value
+	 * 
+	 * @return map of clients
+	 */
 	public Map<SocketAddress, PeerContext> getClients() {
 		return clients;
 	}

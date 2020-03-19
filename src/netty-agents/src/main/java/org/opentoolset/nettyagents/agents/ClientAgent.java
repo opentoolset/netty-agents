@@ -41,6 +41,11 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 
+/**
+ * Client Agent is a type of agent which makes connection attempts to a server-peer, and maintain communication with its peer. 
+ * 
+ * @author hadi
+ */
 public class ClientAgent extends AbstractAgent {
 
 	private static final String DEFAULT_IN_MEMORY_KEYSTORE_PW = "";
@@ -67,6 +72,11 @@ public class ClientAgent extends AbstractAgent {
 		return config;
 	}
 
+	/**
+	 * Returns the oject defining the context of the peer-server. 
+	 * 
+	 * @return
+	 */
 	public PeerContext getServer() {
 		return server;
 	}
@@ -111,14 +121,36 @@ public class ClientAgent extends AbstractAgent {
 		}
 	}
 
+	/**
+	 * Sends a request to the server and waits until receiving the response 
+	 * 
+	 * @param <TReq>
+	 * @param <TResp>
+	 * @param request
+	 * @return
+	 */
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request) {
 		return getContext().getMessageSender().doRequest(request, this.server);
 	}
 
+	/**
+	 * Sends a request to the server and waits until receiving the response or reaching to the specified timeout duration
+	 * 
+	 * @param <TReq>
+	 * @param <TResp>
+	 * @param request
+	 * @param timeoutSec
+	 * @return
+	 */
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, int timeoutSec) {
 		return getContext().getMessageSender().doRequest(request, this.server, timeoutSec);
 	}
 
+	/**
+	 * Sends a message to the server without waiting a response
+	 * 
+	 * @param message
+	 */
 	public void sendMessage(AbstractMessage message) {
 		getContext().getMessageSender().sendMessage(message, this.server);
 	}
