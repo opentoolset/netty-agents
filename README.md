@@ -47,4 +47,7 @@ serverAgent.startup();
 clientAgent.sendMessage(new SampleMessage()); // Sends a message to server without waiting a response
 SampleResponse response = clientAgent.doRequest(new SampleRequest()); // Sends a request to server by waiting until receiving a response or timeout
 ```
+For detailed usage examples please read and try JUnit tests below:
+* MTNettyAgents
+* MTMultiClient
 
