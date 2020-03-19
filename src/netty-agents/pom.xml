@@ -39,6 +39,13 @@
 		<url>https://gitlab.com/opentoolset/netty-agents/</url>
 	</scm>
 
+	<distributionManagement>
+		<repository>
+			<id>bintray-repo-netty-agents</id>
+			<url>https://api.bintray.com/maven/hadidilek/maven-repo/netty-agents/;publish=1</url>
+		</repository>
+	</distributionManagement>
+
 	<build>
 		<plugins>
 			<plugin>
