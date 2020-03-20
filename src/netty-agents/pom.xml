@@ -22,9 +22,6 @@
 		<java.version>1.8</java.version>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<bintray.subject>hadidilek</bintray.subject>
-		<bintray.repo>maven-repo</bintray.repo>
-		<bintray.package>netty-agents</bintray.package>
 	</properties>
 
 	<developers>
@@ -44,8 +41,9 @@
 
 	<distributionManagement>
 		<repository>
-			<id>bintray-repo</id>
-			<url>https://api.bintray.com/maven/${bintray.subject}/${bintray.repo}/${bintray.package}/;publish=1</url>
+			<id>bintray-opentoolset-maven-repo</id>
+			<name>opentoolset-maven-repo</name>
+			<url>https://api.bintray.com/maven/opentoolset/maven-repo/netty-agents/;publish=1</url>
 		</repository>
 	</distributionManagement>
 
