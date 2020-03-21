@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.opentoolset.nettyagents.PeerContext;
 import org.opentoolset.nettyagents.TestData.SampleMessage;
 import org.opentoolset.nettyagents.TestData.SampleRequest;
 import org.opentoolset.nettyagents.TestData.SampleResponse;
@@ -52,15 +51,17 @@ public class MTMultiClient {
 			clientAgent2.sendMessage(new SampleMessage("Sample message from client-2"));
 
 			{
-				SampleResponse response = clientAgent1.doRequest(new SampleRequest("Sample request from client-1"));
+				SampleResponse response = clientAgent1.doRequest(new SampleRequest("Sample request from client-1", 2));
 				System.out.printf("Response received from server: %s\n", response);
 				Assert.assertNotNull(response);
+				Assert.assertEquals(4, response.getNumber());
 			}
 
 			{
-				SampleResponse response = clientAgent2.doRequest(new SampleRequest("Sample request from client-2"));
+				SampleResponse response = clientAgent2.doRequest(new SampleRequest("Sample request from client-2", 3));
 				System.out.printf("Response received from server: %s\n", response);
 				Assert.assertNotNull(response);
+				Assert.assertEquals(9, response.getNumber());
 			}
 		}
 
@@ -69,15 +70,17 @@ public class MTMultiClient {
 			serverAgent.sendMessage(new SampleMessage("Sample message from server to client2"), client2);
 
 			{
-				SampleResponse response = serverAgent.doRequest(new SampleRequest("Sample request from server to client-1"), client1);
+				SampleResponse response = serverAgent.doRequest(new SampleRequest("Sample request from server to client-1", 1), client1);
 				System.out.printf("Response received from client: %s\n", response);
 				Assert.assertNotNull(response);
+				Assert.assertEquals(2, response.getNumber());
 			}
 
 			{
-				SampleResponse response = serverAgent.doRequest(new SampleRequest("Sample request from server to client-2"), client2);
+				SampleResponse response = serverAgent.doRequest(new SampleRequest("Sample request from server to client-2", 3), client2);
 				System.out.printf("Response received from client: %s\n", response);
 				Assert.assertNotNull(response);
+				Assert.assertEquals(5, response.getNumber());
 			}
 		}
 
@@ -109,7 +112,7 @@ public class MTMultiClient {
 
 	private static SampleResponse handleRequestOnServer(SampleRequest request) {
 		System.out.printf("Request received on server: %s\n", request);
-		SampleResponse response = new SampleResponse("Sample response from server");
+		SampleResponse response = new SampleResponse("Sample response from server (square)", (int) Math.pow(request.getNumber(), 2));
 		System.out.printf("Response sending on server: %s\n", response);
 		return response;
 	}
@@ -120,7 +123,7 @@ public class MTMultiClient {
 
 	private static SampleResponse handleRequestOnClient1(SampleRequest request) {
 		System.out.printf("Request received on client1: %s\n", request);
-		SampleResponse response = new SampleResponse("Sample response from client1");
+		SampleResponse response = new SampleResponse("Sample response from client1 (increment by 1)", request.getNumber() + 1);
 		System.out.printf("Response sending on client1: %s\n", response);
 		return response;
 	}
@@ -131,7 +134,7 @@ public class MTMultiClient {
 
 	private static SampleResponse handleRequestOnClient2(SampleRequest request) {
 		System.out.printf("Request received on client2: %s\n", request);
-		SampleResponse response = new SampleResponse("Sample response from client2");
+		SampleResponse response = new SampleResponse("Sample response from client2 (increment by 2)", request.getNumber() + 2);
 		System.out.printf("Response sending on client2: %s\n", response);
 		return response;
 	}

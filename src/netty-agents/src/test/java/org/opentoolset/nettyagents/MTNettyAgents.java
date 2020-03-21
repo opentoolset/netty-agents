@@ -161,9 +161,10 @@ public class MTNettyAgents {
 
 			clientAgent.sendMessage(new SampleMessage("Sample message to server"));
 
-			SampleResponse response = clientAgent.doRequest(new SampleRequest("Sample request to server"));
+			SampleResponse response = clientAgent.doRequest(new SampleRequest("Sample request to server", 1));
 			System.out.printf("Response received from server: %s\n", response);
 			Assert.assertNotNull(response);
+			Assert.assertEquals(2, response.getNumber());
 		}
 
 		{
@@ -171,9 +172,10 @@ public class MTNettyAgents {
 
 			serverAgent.sendMessage(new SampleMessage("Sample message to client"), client);
 
-			SampleResponse response = serverAgent.doRequest(new SampleRequest("Sample request to client"), client);
+			SampleResponse response = serverAgent.doRequest(new SampleRequest("Sample request to client", 4), client);
 			System.out.printf("Response received from client: %s\n", response);
 			Assert.assertNotNull(response);
+			Assert.assertEquals(3, response.getNumber());
 		}
 
 		clientAgent.shutdown();
@@ -206,7 +208,7 @@ public class MTNettyAgents {
 
 	private static SampleResponse handleRequestOnServer(SampleRequest request) {
 		System.out.printf("Request received on server: %s\n", request);
-		SampleResponse response = new SampleResponse("Sample response from server");
+		SampleResponse response = new SampleResponse("Sample response from server (increment by 1)", request.getNumber() + 1);
 		System.out.printf("Response sending on server: %s\n", response);
 		return response;
 	}
@@ -217,7 +219,7 @@ public class MTNettyAgents {
 
 	private static SampleResponse handleRequestOnClient(SampleRequest request) {
 		System.out.printf("Request received on client: %s\n", request);
-		SampleResponse response = new SampleResponse("Sample response from client");
+		SampleResponse response = new SampleResponse("Sample response from client (decrement by 1)", request.getNumber() - 1);
 		System.out.printf("Response sending on client: %s\n", response);
 		return response;
 	}

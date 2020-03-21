@@ -4,16 +4,13 @@
 // ---
 package org.opentoolset.nettyagents;
 
-import org.opentoolset.nettyagents.AbstractMessage;
-import org.opentoolset.nettyagents.AbstractRequest;
-
 public interface TestData {
 
 	public static class SampleMessage extends AbstractMessage {
 
 		private static final long serialVersionUID = 1L;
 
-		public String text;
+		private String text;
 
 		public SampleMessage() {
 			// Required for deserialization
@@ -35,13 +32,16 @@ public interface TestData {
 
 		private String text;
 
+		private int number;
+
 		public SampleRequest() {
 			// Required for deserialization
 		}
 
-		public SampleRequest(String text) {
+		public SampleRequest(String text, int number) {
 			this();
 			this.text = text;
+			this.number = number;
 		}
 
 		@Override
@@ -52,6 +52,10 @@ public interface TestData {
 		public String getText() {
 			return text;
 		}
+
+		public int getNumber() {
+			return number;
+		}
 	}
 
 	public static class SampleResponse extends AbstractMessage {
@@ -60,17 +64,24 @@ public interface TestData {
 
 		private String text;
 
+		private int number;
+
 		public SampleResponse() {
 			// Required for deserialization
 		}
 
-		public SampleResponse(String text) {
+		public SampleResponse(String text, int number) {
 			this();
 			this.text = text;
+			this.number = number;
 		}
 
 		public String getText() {
 			return text;
+		}
+
+		public int getNumber() {
+			return number;
 		}
 	}
 }
