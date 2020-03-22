@@ -2,15 +2,17 @@
 
 Easy to use, message based, synchronous communication library based on Netty (https://netty.io/).
 
+Project Wiki: https://gitlab.com/opentoolset/netty-agents/-/wikis/home
+
 Project Web site: https://www.opentoolset.org/
 
 ## Features
-* Easy and ready-to-use communication agents based on Netty library
-* Eliminates repeated and boilerplate code when using Netty as a communication library
-* Strongly-typed, well-defined, message based communication interfaces
-* Suppors synchronous (request-response based) communication through stateful channels
-* Provides security with mutual TLS authentication with certificates
-* Supports bi-directional, multi-client communication
+* Support for bi-directional communication with continuous channels,
+* Performance, customization and flexibility using nice features of Netty library (socket level communication, channel pipeline context, etc.)
+* Ability to design and use of a strongly-typed (with POJO objects) and well-defined protocol in applications
+* Support for blocking, request-response based communication model as well as supporting asynchronous pattern
+* Easily implementation of communication and security requirements in any Java project by writing lower code using a simplified library interface based on agent context.
+* Secure communication with TLS and mutual certificate authentication
 
 ## Sample Use Case
 
