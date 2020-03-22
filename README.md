@@ -4,7 +4,7 @@ Easy to use, message based, synchronous communication library based on Netty (ht
 
 Project Wiki: https://gitlab.com/opentoolset/netty-agents/-/wikis/home
 
-Project Web site: https://www.opentoolset.org/
+Project Web site: https://opentoolset.org/
 
 ## Features
 * Support for bi-directional communication with continuous channels,
