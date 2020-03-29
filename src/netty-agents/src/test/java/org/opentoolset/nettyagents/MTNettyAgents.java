@@ -84,7 +84,7 @@ public class MTNettyAgents {
 			System.out.printf("Remote socket: %s - Client fingerprint: %s\n", socketAddress, clientFingerprint);
 
 			{
-				// if user on server side gives trust after checking client fingerprint via a seperate channel (ie. offline methods)
+				// if user on server side trusts the client after checking client fingerprint via a seperate channel (ie. offline methods)
 				client.setTrusted(true);
 
 				// if user on server side decides to save this trust in memory
@@ -97,7 +97,7 @@ public class MTNettyAgents {
 		System.out.printf("Server fingerprint: %s\n", serverFingerprint);
 
 		{
-			// if user on client side gives trust after checking client fingerprint via a seperate channel (ie. offline methods)
+			// if user on client side trusts the client after checking client fingerprint via a seperate channel (ie. offline methods)
 			clientAgent.getServer().setTrusted(true);
 
 			// if user on client side decides to save this trust in memory
