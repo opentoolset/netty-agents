@@ -35,6 +35,14 @@ import io.netty.channel.ChannelHandlerContext;
 
 public class Utils {
 
+	public static void waitFor(int timeSec) {
+		try {
+			TimeUnit.SECONDS.sleep(timeSec);
+		} catch (InterruptedException e) {
+			Context.getLogger().warn(e.getLocalizedMessage(), e);
+		}
+	}
+
 	public static boolean waitUntil(Supplier<Boolean> tester, int timeoutSec) {
 		try {
 			for (int i = 0; i < timeoutSec; i++) {

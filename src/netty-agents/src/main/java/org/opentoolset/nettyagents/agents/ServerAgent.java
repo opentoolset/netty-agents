@@ -109,6 +109,8 @@ public class ServerAgent extends AbstractAgent {
 	}
 
 	public void shutdown() {
+		this.shutdownRequested = true;
+
 		getContext().getMessageSender().shutdown();
 		this.bossGroup.shutdownGracefully();
 		this.workerGroup.shutdownGracefully();
@@ -130,7 +132,7 @@ public class ServerAgent extends AbstractAgent {
 
 	private void maintainConnection() {
 		try {
-			while (!shutdownRequested) {
+			while (!this.shutdownRequested) {
 				ChannelFuture channelFuture = this.bootstrap.bind(this.config.getLocalPort()).sync();
 				channelFuture.channel().closeFuture().sync();
 			}
@@ -268,7 +270,7 @@ public class ServerAgent extends AbstractAgent {
 					}
 				}
 			} catch (Exception e) {
-				// logger.debug(e.getLocalizedMessage(), e);
+				 logger.debug(e.getLocalizedMessage(), e);
 			}
 		}
 	}

@@ -42,7 +42,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 
 /**
- * Client Agent is a type of agent which makes connection attempts to a server-peer, and maintain communication with its peer. 
+ * Client Agent is a type of agent which makes connection attempts to a server-peer, and maintain communication with its peer.
  * 
  * @author hadi
  */
@@ -73,7 +73,7 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	/**
-	 * Returns the oject defining the context of the peer-server. 
+	 * Returns the oject defining the context of the peer-server.
 	 * 
 	 * @return
 	 */
@@ -103,6 +103,7 @@ public class ClientAgent extends AbstractAgent {
 		this.bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
 		this.bootstrap.handler(new ClientChannelInitializer());
 		this.bootstrap.remoteAddress(new InetSocketAddress(config.getRemoteHost(), config.getRemotePort()));
+
 		new Thread(() -> maintainConnection()).start();
 	}
 
@@ -122,7 +123,7 @@ public class ClientAgent extends AbstractAgent {
 	}
 
 	/**
-	 * Sends a request to the server and waits until receiving the response 
+	 * Sends a request to the server and waits until receiving the response
 	 * 
 	 * @param <TReq>
 	 * @param <TResp>
@@ -158,23 +159,25 @@ public class ClientAgent extends AbstractAgent {
 	// ---
 
 	private void maintainConnection() {
-		try {
-			while (!shutdownRequested) {
+		while (!this.shutdownRequested) {
+			try {
 				ChannelFuture channelFuture = null;
-				while ((channelFuture = connectSafe()) == null && !shutdownRequested) {
+				while (!this.shutdownRequested && (channelFuture = connectSafe()) == null) {
 					TimeUnit.SECONDS.sleep(1);
 				}
 
-				channelFuture.channel().closeFuture().sync();
+				if (channelFuture != null) {
+					channelFuture.channel().closeFuture().sync();
+				}
+			} catch (InterruptedException e) {
+				logger.debug(e.getLocalizedMessage(), e);
 			}
-		} catch (InterruptedException e) {
-			logger.debug(e.getLocalizedMessage(), e);
 		}
 	}
 
 	private ChannelFuture connectSafe() throws InterruptedException {
 		try {
-			if (!shutdownRequested) {
+			if (!this.shutdownRequested) {
 				return this.bootstrap.connect().sync();
 			}
 		} catch (Exception e) {
@@ -263,7 +266,7 @@ public class ClientAgent extends AbstractAgent {
 				logger.debug(e.getLocalizedMessage(), e);
 			}
 		}
-		
+
 		@Override
 		public AbstractConfig getConfig() {
 			return ClientAgent.this.getConfig();
@@ -327,7 +330,7 @@ public class ClientAgent extends AbstractAgent {
 					}
 				}
 			} catch (Exception e) {
-				// logger.debug(e.getLocalizedMessage(), e);
+				logger.debug(e.getLocalizedMessage(), e);
 			}
 		}
 	}

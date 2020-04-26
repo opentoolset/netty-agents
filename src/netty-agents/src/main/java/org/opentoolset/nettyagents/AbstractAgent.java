@@ -52,8 +52,10 @@ public abstract class AbstractAgent {
 	 * 
 	 * @param <TReq>
 	 * @param <TResp>
-	 * @param classOfRequest Specifies the request type
-	 * @param function Specifies the function which will be executed when this request is made
+	 * @param classOfRequest
+	 *          Specifies the request type
+	 * @param function
+	 *          Specifies the function which will be executed when this request is made
 	 */
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> void setRequestHandler(Class<TReq> classOfRequest, Function<TReq, TResp> function) {
 		this.context.getMessageReceiver().setRequestHandler(classOfRequest, function);
@@ -63,8 +65,10 @@ public abstract class AbstractAgent {
 	 * Creates a request handler for a specific message type
 	 * 
 	 * @param <T>
-	 * @param classOfMessage Specifies the message type
-	 * @param consumer Specifies the consumer which will accept and process this message when it reaches to this agent
+	 * @param classOfMessage
+	 *          Specifies the message type
+	 * @param consumer
+	 *          Specifies the consumer which will accept and process this message when it reaches to this agent
 	 */
 	public <T extends AbstractMessage> void setMessageHandler(Class<T> classOfMessage, Consumer<T> consumer) {
 		this.context.getMessageReceiver().setMessageHandler(classOfMessage, consumer);
