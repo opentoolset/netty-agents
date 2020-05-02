@@ -8,7 +8,7 @@
 	<packaging>jar</packaging>
 
 	<name>Netty Agents</name>
-	<description>Easy to use, message based and synchronous communication tool based on Netty library.</description>
+	<description>A message based and easy to use communication tool based on Netty library.</description>
 	<url>https://gitlab.com/opentoolset/netty-agents/</url>
 
 	<licenses>
