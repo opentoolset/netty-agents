@@ -111,12 +111,12 @@ public class ClientAgent extends AbstractAgent {
 		try {
 			this.shutdownRequested = true;
 
+			this.workerGroup.shutdownGracefully();
+
 			ChannelHandlerContext channelHandlerContext = this.server.getChannelHandlerContext();
 			if (channelHandlerContext != null) {
 				channelHandlerContext.close();
 			}
-
-			this.workerGroup.shutdownGracefully();
 		} catch (Exception e) {
 			logger.warn(e.getLocalizedMessage(), e);
 		}
@@ -169,8 +169,8 @@ public class ClientAgent extends AbstractAgent {
 				if (channelFuture != null) {
 					channelFuture.channel().closeFuture().sync();
 				}
-			} catch (InterruptedException e) {
-				logger.debug(e.getLocalizedMessage(), e);
+			} catch (Exception e) {
+				logger.error(e.getLocalizedMessage(), e);
 			}
 		}
 	}

@@ -4,15 +4,12 @@
 // ---
 package org.opentoolset.nettyagents;
 
-import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class MessageWrapper implements Serializable {
-
-	private static final long serialVersionUID = 7776235450857746832L;
+public class MessageWrapper {
 
 	public interface Serializer {
 
@@ -20,10 +17,6 @@ public class MessageWrapper implements Serializable {
 
 		<T> T deserialize(String serialized, Class<T> classOfObj);
 	}
-
-	public transient static Serializer serializer = new SerializerJson();
-
-	private transient static Serializer outerSerializer = new SerializerJson();
 
 	private Class<? extends AbstractMessage> classOfMessage;
 	private String serializedMessage;
@@ -39,7 +32,7 @@ public class MessageWrapper implements Serializable {
 	public static <T extends AbstractMessage> MessageWrapper create(T message) {
 		MessageWrapper messageWrapper = new MessageWrapper();
 		messageWrapper.classOfMessage = message.getClass();
-		messageWrapper.serializedMessage = serializer.serialize(message);
+		messageWrapper.serializedMessage = getSerializer().serialize(message);
 		return messageWrapper;
 	}
 
@@ -80,12 +73,12 @@ public class MessageWrapper implements Serializable {
 	}
 
 	public AbstractMessage deserializeMessage() {
-		AbstractMessage message = serializer.deserialize(this.serializedMessage, this.classOfMessage);
+		AbstractMessage message = getSerializer().deserialize(this.serializedMessage, this.classOfMessage);
 		return message;
 	}
 
 	public <T extends AbstractMessage> T deserializeMessage(Class<T> classOfMessage) {
-		T message = serializer.deserialize(this.serializedMessage, classOfMessage);
+		T message = getSerializer().deserialize(this.serializedMessage, classOfMessage);
 		return message;
 	}
 
@@ -97,12 +90,22 @@ public class MessageWrapper implements Serializable {
 	// ---
 
 	public static String serialize(MessageWrapper messageWrapper) {
-		String serialized = outerSerializer.serialize(messageWrapper);
+		String serialized = getOuterSerializer().serialize(messageWrapper);
 		return serialized;
 	}
 
 	public static MessageWrapper deserialize(String serializedMessageWrapper) {
-		MessageWrapper messageWrapper = outerSerializer.deserialize(serializedMessageWrapper, MessageWrapper.class);
+		MessageWrapper messageWrapper = getOuterSerializer().deserialize(serializedMessageWrapper, MessageWrapper.class);
 		return messageWrapper;
+	}
+
+	// ---
+
+	private static Serializer getSerializer() {
+		return Context.getSerializer();
+	}
+
+	private static Serializer getOuterSerializer() {
+		return Context.getOuterSerializer();
 	}
 }

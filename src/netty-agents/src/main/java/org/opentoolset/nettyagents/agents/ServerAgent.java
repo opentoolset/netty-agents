@@ -44,7 +44,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 
 /**
- * Server Agent is a type of agent which makes listens incoming connection requests to this agent, and maintain communication with each connected peer. 
+ * Server Agent is a type of agent which makes listens incoming connection requests to this agent, and maintain communication with each connected peer.
  * 
  * @author hadi
  */
@@ -111,9 +111,10 @@ public class ServerAgent extends AbstractAgent {
 	public void shutdown() {
 		this.shutdownRequested = true;
 
-		getContext().getMessageSender().shutdown();
 		this.bossGroup.shutdownGracefully();
 		this.workerGroup.shutdownGracefully();
+
+		getContext().getMessageSender().shutdown();
 	}
 
 	public <TReq extends AbstractRequest<TResp>, TResp extends AbstractMessage> TResp doRequest(TReq request, PeerContext peerContext) {
@@ -136,8 +137,8 @@ public class ServerAgent extends AbstractAgent {
 				ChannelFuture channelFuture = this.bootstrap.bind(this.config.getLocalPort()).sync();
 				channelFuture.channel().closeFuture().sync();
 			}
-		} catch (InterruptedException e) {
-			logger.error("Interrupted", e);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
 		}
 	}
 
@@ -270,7 +271,7 @@ public class ServerAgent extends AbstractAgent {
 					}
 				}
 			} catch (Exception e) {
-				 logger.debug(e.getLocalizedMessage(), e);
+				logger.debug(e.getLocalizedMessage(), e);
 			}
 		}
 	}

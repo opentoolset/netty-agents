@@ -8,8 +8,6 @@ public interface TestData {
 
 	public static class SampleMessage extends AbstractMessage {
 
-		private static final long serialVersionUID = 1L;
-
 		private String text;
 
 		public SampleMessage() {
@@ -27,8 +25,6 @@ public interface TestData {
 	}
 
 	public static class SampleRequest extends AbstractRequest<SampleResponse> {
-
-		private static final long serialVersionUID = 1L;
 
 		private String text;
 
@@ -59,8 +55,6 @@ public interface TestData {
 	}
 
 	public static class SampleResponse extends AbstractMessage {
-
-		private static final long serialVersionUID = 1L;
 
 		private String text;
 

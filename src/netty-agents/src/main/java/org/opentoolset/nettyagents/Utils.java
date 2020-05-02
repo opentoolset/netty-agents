@@ -154,6 +154,4 @@ public class Utils {
 		result = result && Objects.equals(ctx.channel(), peer.getChannelHandlerContext().channel());
 		return result;
 	}
-
-	// ---
 }

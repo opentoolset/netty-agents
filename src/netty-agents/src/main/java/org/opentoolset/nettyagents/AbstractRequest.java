@@ -9,8 +9,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public abstract class AbstractRequest<T extends AbstractMessage> extends AbstractMessage {
 
-	private static final long serialVersionUID = 5736156127766377417L;
-
 	public abstract Class<T> getResponseClass();
 
 	@Override

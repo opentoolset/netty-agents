@@ -8,6 +8,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.opentoolset.nettyagents.MessageWrapper.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,11 @@ public class Context {
 
 	private static Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
-//	private boolean tlsEnabled = Constants.DEFAULT_TLS_ENABLED;
+	// private boolean tlsEnabled = Constants.DEFAULT_TLS_ENABLED;
+
+	private static Serializer serializer = new SerializerJson();
+
+	private static Serializer outerSerializer = new SerializerJson();
 
 	private boolean trustNegotiationMode = false;
 
@@ -33,10 +38,14 @@ public class Context {
 
 	// ---
 
-//	public boolean isTlsEnabled() {
-//		return tlsEnabled;
-//	}
-	
+	public static Serializer getSerializer() {
+		return serializer;
+	}
+
+	public static Serializer getOuterSerializer() {
+		return outerSerializer;
+	}
+
 	public boolean isTrustNegotiationMode() {
 		return trustNegotiationMode;
 	}
@@ -54,11 +63,11 @@ public class Context {
 	}
 
 	// ---
-	
-//	public void setTlsEnabled(boolean tlsEnabled) {
-//		this.tlsEnabled = tlsEnabled;
-//	}
-	
+
+	// public void setTlsEnabled(boolean tlsEnabled) {
+	// this.tlsEnabled = tlsEnabled;
+	// }
+
 	public void setTrustNegotiationMode(boolean peerIdentificationMode) {
 		this.trustNegotiationMode = peerIdentificationMode;
 	}

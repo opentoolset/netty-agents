@@ -4,14 +4,10 @@
 // ---
 package org.opentoolset.nettyagents;
 
-import java.io.Serializable;
-
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public abstract class AbstractMessage implements Serializable {
-
-	private static final long serialVersionUID = 1L;
+public abstract class AbstractMessage {
 
 	@Override
 	public String toString() {
