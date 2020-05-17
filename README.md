@@ -2,11 +2,10 @@
 
 Easy to use, message based, synchronous communication library based on Netty (https://netty.io/).
 
-Project Wiki: https://gitlab.com/opentoolset/netty-agents/-/wikis/home
+* Project Wiki: https://gitlab.com/opentoolset/netty-agents/-/wikis/home
+* Project Web site: https://opentoolset.org/
+* Maven repository: https://bintray.com/opentoolset/maven-repo/netty-agents/
 
-Project Web site: https://opentoolset.org/
-
-[Download from maven repository](https://bintray.com/opentoolset/maven-repo/netty-agents/)
 
 ## Features
 * Support for bi-directional communication with continuous channels,
