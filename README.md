@@ -6,6 +6,8 @@ Project Wiki: https://gitlab.com/opentoolset/netty-agents/-/wikis/home
 
 Project Web site: https://opentoolset.org/
 
+**{tanuki}**
+
 [Download v1.0.1](https://bintray.com/opentoolset/maven-repo/netty-agents/1.0.1/link)
 
 ## Features
