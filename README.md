@@ -1,4 +1,4 @@
-# netty-agents
+# Netty Agents
 
 Easy to use, message based, synchronous communication library based on Netty (https://netty.io/).
 
