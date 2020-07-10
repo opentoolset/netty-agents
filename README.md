@@ -9,7 +9,7 @@ Easy to use, message based, synchronous communication library based on Netty (ht
 
 ## Features
 * Support for bi-directional communication with continuous channels,
-* Performance, customization and flexibility using nice features of Netty library (socket level communication, channel pipeline, etc.)
+* Performance, customization and flexibility using nice features of Netty library (socket level communication, pipes and filters pattern, etc.)
 * Ability to design and use of a strongly-typed (with POJO objects) and well-defined protocol in applications
 * Support for blocking, request-response based communication model as well as supporting asynchronous pattern
 * Easily implementation of communication and security requirements in any Java project by writing lower code using a simplified library interface based on agent concept.
