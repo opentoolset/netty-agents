@@ -1,6 +1,6 @@
 # Netty Agents
 
-Easy to use, message based, synchronous communication library based on Netty (https://netty.io/).
+Easy to use, message based communication library based on Netty (https://netty.io/).
 
 * Project Wiki: https://gitlab.com/opentoolset/netty-agents/-/wikis/home
 * Project Web site: https://opentoolset.org/
