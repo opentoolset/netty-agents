@@ -33,8 +33,8 @@ private static void handleMessage(SampleMessage message) {
     // ...
 }
 
-private static SampleResponse1 handleRequest(SampleRequest request) {
-    SampleResponse1 response = new SampleResponse();
+private static SampleResponse handleRequest(SampleRequest request) {
+    SampleResponse response = new SampleResponse();
     // ...
     // business logic
     // ...
