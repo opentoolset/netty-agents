@@ -15,7 +15,7 @@ Easy to use, message based communication library based on Netty (https://netty.i
 * Easily implementation of communication and security requirements in any Java project by writing lower code using a simplified library interface based on agent concept.
 * Secure communication with TLS and mutual certificate authentication
 
-## Sample Use Case
+## Simple Use Case
 
 Sample server code like below:
 
